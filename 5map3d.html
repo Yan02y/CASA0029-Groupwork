@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D View</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+    body::-webkit-scrollbar { display: none; }
+    body { display: flex; align-items: center; padding: 40px 0; }
+    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
+    .map3d-grid { display: grid; grid-template-columns: 320px 1fr; gap: 3rem; align-items: start; }
+    .map3d-stats { display: flex; flex-direction: column; gap: 0.8rem; align-self: start; }
+    .map3d-stats .tag { align-self: flex-start; width: auto; }
+    .lead { max-width: 100%; }
+    .ph { width: 100%; height: 100% !important; margin: 0; }
+    .stat-item { flex: 0 0 auto; min-height: 40px; padding: 0.6rem;margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="page-inner">
+    <div class="map3d-grid">
+      <div class="map3d-stats">
+        <div class="tag rv">04 · 3D View</div>
+        <h2 class="rv d1">Building height &amp; density</h2>
+        <p class="lead rv d2" style="font-size:1rem; margin-bottom:1rem;">NYC building footprint data covers ~1M records. Density metrics calculated per NTA and joined with solar status.</p>
+          
+        <div class="stat-item rv d2"><div class="stat-val">~1M</div><div class="stat-lbl">Building footprint records</div></div>
+        <div class="stat-item rv d3"><div class="stat-val">195</div><div class="stat-lbl">Neighbourhood Tabulation Areas</div></div>
+        <div class="stat-item rv d4"><div class="stat-val">5</div><div class="stat-lbl">Boroughs analysed</div></div>
+      </div>
+
+      <!-- ↓ REPLACE WITH REAL DECK.GL / MAPBOX 3D -->
+      <div class="ph rv d1" style="height:78vh;">
+        [ 3D BUILDING MAP ]<br><br>
+        Mapbox / deck.gl building extrusion<br>
+        Height coloured by density · Solar overlay
+      </div>
+    </div>
+  </div>
+  <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
+</body>
+</html>

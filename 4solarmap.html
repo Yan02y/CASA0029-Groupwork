@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar Map</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; background: var(--cyan-light); }
+    body::-webkit-scrollbar { display: none; }
+    body { display: flex; align-items: center; padding: 40px 0; }
+    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
+    .smap-grid { display: grid; grid-template-columns: 320px 1fr; gap: 3rem; align-items: start; }
+    .ph { width: 100%; height: 100% !important; margin: 0; }
+    .smap-side { display: flex; flex-direction: column; gap: 0.8rem; padding-top: 2rem; align-items: flex-start; }
+    .toggle-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.8rem; width: 100%; }
+    .t-btn {
+      width: 100%; max-width: 280px; 
+      font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
+      padding: 1rem 1.2rem;
+      border: 2px solid var(--headline); border-radius: 6px;
+      color: var(--headline); background: var(--bg);
+      cursor: pointer; text-align: left; transition: all 0.2s;
+    }
+    .t-btn:hover { background: var(--cyan-dark); transform: translateX(4px); }
+    .t-btn.active { background: var(--yellow); box-shadow: 3px 3px 0px var(--headline); transform: translateX(4px); }
+  </style>
+</head>
+<body>
+  <div class="page-inner">
+    <div class="smap-grid">
+      <div class="smap-side">
+        <div class="tag rv">03 · Solar Map</div>
+        <h2 class="rv d1">Solar distribution across NYC</h2>
+        <p class="lead rv d2">Interactive Mapbox map showing solar project locations by status. Toggle layers to explore where solar is taking root.</p>
+        <div class="toggle-list rv d3">
+          <button class="t-btn active" onclick="filterMap(this,'all')">● All projects</button>
+          <button class="t-btn" onclick="filterMap(this,'completed')">● Completed</button>
+          <button class="t-btn" onclick="filterMap(this,'progress')">● In Progress</button>
+          <button class="t-btn" onclick="filterMap(this,'ready')">● Solar Ready</button>
+        </div>
+      </div>
+
+      <!-- ↓ REPLACE WITH REAL MAPBOX MAP -->
+      <div class="ph rv d1" style="height:78vh;">
+        [ INTERACTIVE MAPBOX MAP ]<br><br>
+        Solar project locations<br>
+        Status filter · Year slider
+      </div>
+    </div>
+  </div>
+  <script>
+    window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));
+    function filterMap(btn, layer) {
+      document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // TODO: hook up real Mapbox layer filter
+      console.log('Filter:', layer);
+    }
+  </script>
+</body>
+</html>

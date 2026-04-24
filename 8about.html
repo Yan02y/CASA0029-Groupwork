@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; background: var(--cyan-light); }
+    body { display: flex; flex-direction: column; }
+    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 3vw 6vw; flex: 1; }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; margin-top: 1rem; }
+    .team-list { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1.5rem; }
+    .t-card {
+      display: flex; align-items: center; gap: 1.2rem;
+      padding: 1rem; border: 2.5px solid var(--headline);
+      border-radius: 8px; background: var(--bg);
+      box-shadow: 4px 4px 0px var(--headline); transition: all 0.2s;
+    }
+    .t-card:hover { background: var(--yellow); transform: translate(-2px,-2px); box-shadow: 6px 6px 0px var(--headline); }
+    .t-av {
+      width: 48px; height: 48px; background: var(--cyan-dark);
+      border: 2px solid var(--headline); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.2rem; color: var(--headline); flex-shrink: 0;
+    }
+    .t-name { font-weight: 700; font-size: 1rem; color: var(--headline); }
+    .t-role { font-size: 0.85rem; font-weight: 500; margin-top: 0.2rem; }
+    .src-list {
+      background: var(--bg); border: 2.5px solid var(--headline);
+      border-radius: 8px; box-shadow: 4px 4px 0px var(--headline);
+      padding: 0 1.5rem; margin-top: 1rem;
+    }
+    .src-row {
+      display: flex; gap: 1rem; padding: 1.1rem 0;
+      border-bottom: 2px dashed rgba(43,44,52,0.2);
+      font-size: 0.85rem; align-items: flex-start;
+    }
+    .src-row:last-child { border-bottom: none; }
+    .src-n {
+      font-weight: 700; font-size: 0.8rem;
+      background: var(--yellow); border: 2px solid var(--headline);
+      border-radius: 4px; color: var(--headline);
+      padding: 0.2rem 0.5rem; flex-shrink: 0;
+    }
+    .src-row strong { display: block; font-size: 0.95rem; color: var(--headline); margin-bottom: 0.3rem; font-weight: 700; }
+    .src-row span { font-size: 0.82rem; font-weight: 500; }
+    .footer-bar {
+      background: var(--headline);
+      padding: 1rem 3rem;
+      font-weight: 700; font-size: 0.8rem;
+      color: var(--bg); text-align: center;
+    }
+    .footer-bar span { color: var(--yellow); }
+  </style>
+</head>
+<body>
+  <div class="page-inner">
+    <div class="tag rv">07 · About</div>
+    <div class="about-grid">
+      <div>
+        <h2 class="rv d1">Team &amp; project</h2>
+        <p class="rv d2 lead" style="margin-bottom:1rem;">CASA0029: Urban Data Visualisation<br>Centre for Advanced Spatial Analysis, UCL</p>
+        <div class="team-list">
+          <div class="t-card rv d2"><div class="t-av">Y</div><div><div class="t-name">Yifei Sun</div><div class="t-role">Time-series chart · Choropleth map</div></div></div>
+          <div class="t-card rv d3"><div class="t-av">Y</div><div><div class="t-name">Yutong Chen</div><div class="t-role">3D building map · Findings & reflection</div></div></div>
+          <div class="t-card rv d4"><div class="t-av">J</div><div><div class="t-name">Jie Liu</div><div class="t-role">Web framework · Solar distribution</div></div></div>
+        </div>
+      </div>
+      <div>
+        <h2 class="rv d1" style="font-size:1.8rem;">Data sources</h2>
+        <div class="src-list rv d2">
+          <div class="src-row"><span class="src-n">01</span><div><strong>NYC Building Footprints</strong><span>NYC Open Data · ~1M records (height, footprint, year built)</span></div></div>
+          <div class="src-row"><span class="src-n">02</span><div><strong>Solar-Readiness Assessment</strong><span>Local Law 24 of 2016 · Completed / In Progress / Solar Ready</span></div></div>
+          <div class="src-row"><span class="src-n">03</span><div><strong>NYSERDA NY-Sun</strong><span>7,474 completed + 3,714 pipeline · County level · 2000–2026</span></div></div>
+          <div class="src-row"><span class="src-n">04</span><div><strong>US Census Bureau ACS</strong><span>Median household income by census tract</span></div></div>
+          <div class="src-row"><span class="src-n">05</span><div><strong>Mapbox GL JS</strong><span>Base map tiles · 3D extrusion · Choropleth rendering</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bar">CASA0029 · Urban Data Visualisation · UCL CASA · 2025–26 &nbsp;|&nbsp; <span>Renewable Inequality in NYC</span></div>
+  <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
+</body>
+</html>

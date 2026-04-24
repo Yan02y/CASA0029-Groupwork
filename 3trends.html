@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trends</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+    body::-webkit-scrollbar { display: none; }
+    body { display: flex; align-items: center; padding: 40px 0; background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('images/nyc.png') center center / cover no-repeat; }
+    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 2.2fr; gap: 3rem; align-items: center; }
+    .chart-side { display: flex; flex-direction: column; gap: 0.8rem; align-items: flex-start; padding-top: 2rem; }
+    .stat-item { width: 100%; max-width: 320px; }
+  </style>
+</head>
+<body>
+  <div class="page-inner">
+    <div class="chart-grid">
+      <div class="chart-side">
+        <div class="tag rv">02 · Trends</div>
+        <h2 class="rv d1">Solar growth over time</h2>
+        <p class="lead rv d2" style="margin-bottom:0.5rem;">NYSERDA data tracks solar installations 2000–2026. The chart reveals how rates, costs and incentive structures evolved.</p>
+        <div class="stat-item rv d3"><div class="stat-val">7,474</div><div class="stat-lbl">Completed NYC-area projects</div></div>
+        <div class="stat-item rv d4"><div class="stat-val">3,714</div><div class="stat-lbl">Pipeline (not yet installed)</div></div>
+      </div>
+
+      <!-- ↓ REPLACE WITH REAL CHART (D3 / Chart.js / Plotly) -->
+      <div class="ph rv d1" style="height:68vh;">
+        [ TIME-SERIES LINE CHART ]<br><br>
+        NYSERDA NY-Sun · 2000–2026<br>
+        Borough comparison · Cost decline
+      </div>
+    </div>
+  </div>
+  <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
+</body>
+</html>

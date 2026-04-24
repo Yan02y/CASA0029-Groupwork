@@ -1,0 +1,98 @@
+/* ── shared.css ── used by every page file ── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:         #fffffe;
+  --cyan-light: #e3f6f5;
+  --cyan-dark:  #bae8e8;
+  --yellow:     #ffd803;
+  --orange:     #ff8906;
+  --headline:   #2b2c34;
+  --para:       #2b2c34;
+  --border-w:   2.5px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--para);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── shared tag chip ── */
+.tag {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--headline);
+  background: var(--yellow);
+  border: 2px solid var(--headline);
+  border-radius: 4px;
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  margin-bottom: 1rem;
+  box-shadow: 2px 2px 0px var(--headline);
+}
+
+h2 {
+  font-family: 'DM Sans', sans-serif;
+  color: var(--headline);
+  font-size: clamp(2rem, 3.5vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  font-size: clamp(1rem, 1.15vw, 1.1rem);
+  line-height: 1.7;
+  color: var(--para);
+  max-width: 600px;
+  font-weight: 500;
+}
+
+/* placeholder box */
+.ph {
+  background: var(--cyan-dark);
+  border: var(--border-w) solid var(--headline);
+  border-radius: 12px;
+  box-shadow: 6px 6px 0px var(--headline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--headline);
+  line-height: 2;
+}
+
+/* stat card */
+.stat-item {
+  background: var(--bg);
+  border: 2px solid var(--headline);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  box-shadow: 4px 4px 0px var(--headline);
+}
+.stat-val {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 2.2rem;
+  color: var(--orange);
+  line-height: 1;
+}
+.stat-lbl { font-size: 0.85rem; font-weight: 700; color: var(--headline); margin-top: 0.4rem; }
+
+/* reveal animation */
+.rv { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease-out, transform 0.5s ease-out; }
+.rv.d1 { transition-delay: 0.1s; }
+.rv.d2 { transition-delay: 0.2s; }
+.rv.d3 { transition-delay: 0.3s; }
+.rv.d4 { transition-delay: 0.4s; }
+.rv.on { opacity: 1; transform: none; }

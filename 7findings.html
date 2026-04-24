@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Findings</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+    body::-webkit-scrollbar { display: none; }
+    body { display: flex; align-items: center; padding: 40px 0; }
+    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
+    .concl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 0.8rem; }
+    .findings { display: flex; flex-direction: column; gap: 1.25rem; }
+    .finding {
+      display: flex; gap: 1.2rem;
+      padding: 1.25rem 1.5rem;
+      border: 2.5px solid var(--headline);
+      background: var(--bg);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0px var(--headline);
+      transition: all 0.2s;
+    }
+    .finding:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0px var(--headline); }
+    .f-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .finding h3 { font-size: 1.1rem; font-weight: 700; color: var(--headline); margin-bottom: 0.4rem; }
+    .finding p { font-size: 0.9rem; font-weight: 500; line-height: 1.6; }
+    .q-block {
+      background: var(--cyan-dark);
+      border: 2.5px solid var(--headline);
+      border-radius: 8px; padding: 2rem;
+      box-shadow: 6px 6px 0px var(--headline);
+      margin-top: 1rem;
+    }
+    .q-block blockquote {
+      font-weight: 700; font-size: clamp(1.1rem,1.7vw,1.35rem);
+      color: var(--headline); line-height: 1.5; margin-bottom: 1.5rem;
+    }
+    .q-block cite {
+      font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
+      color: var(--headline); background: var(--yellow);
+      padding: 0.2rem 0.5rem; border: 2px solid var(--headline); border-radius: 4px;
+    }
+    .refl { margin-top: 1.5rem; font-size: 0.95rem; line-height: 1.6; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="page-inner">
+    <div class="tag rv">06 · Findings</div>
+    <div class="concl-grid">
+      <div class="findings">
+        <h2 class="rv d1">Key findings &amp; reflections</h2>
+        <div class="finding rv d2"><span class="f-icon">🏙️</span><div><h3>Density &amp; Solar Uptake</h3><p>[Key finding placeholder] — Analysis of building density per NTA and its correlation with solar installation rates.</p></div></div>
+        <div class="finding rv d3"><span class="f-icon">🏗️</span><div><h3>Height as a Barrier</h3><p>[Key finding placeholder] — Relationship between building height and solar adoption, including shading effects.</p></div></div>
+        <div class="finding rv d4"><span class="f-icon">💰</span><div><h3>Income &amp; Access</h3><p>[Key finding placeholder] — Correlation between median household income and solar adoption rate.</p></div></div>
+      </div>
+      <div class="q-block rv d2">
+        <blockquote>"The geography of solar energy is not simply a map of sunshine — it is a map of inequality, shaped by the built environment."</blockquote>
+        <cite>Renewable Inequality</cite>
+        <p class="refl">[Reflection placeholder] — What structural barriers does this project reveal? What policy implications emerge from the spatial patterns identified?</p>
+      </div>
+    </div>
+  </div>
+  <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
+</body>
+</html>

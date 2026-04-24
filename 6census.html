@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Income &amp; Solar</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; background: var(--cyan-light); }
+    body::-webkit-scrollbar { display: none; }
+    body { display: flex; align-items: center; padding: 40px 0; }
+    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
+    .choro-grid { display: grid; grid-template-columns: 320px 1fr; gap: 3rem; align-items: start; }
+    .choro-grid > div:last-child { padding-top: 2rem; }
+    .lead { max-width: 100%; }
+    .ph { width: 100%; height: 100% !important; margin:0; }
+    .leg-panel {
+      background: var(--bg); border: 2.5px solid var(--headline);
+      border-radius: 8px; padding: 1.5rem;
+      display: flex; flex-direction: column; gap: 1.5rem;
+      margin-top: 1rem; box-shadow: 4px 4px 0px var(--headline);
+    }
+    .leg-head { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; color: var(--headline); margin-bottom: 0.8rem; }
+    .leg-rows { display: flex; flex-direction: column; gap: 0.6rem; }
+    .leg-row { display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem; font-weight: 500; color: var(--headline); }
+    .swatch { width: 32px; height: 16px; border: 2px solid var(--headline); border-radius: 4px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div class="page-inner">
+    <div class="choro-grid">
+      <div>
+        <div class="tag rv">05 · Census &amp; Solar</div>
+        <h2 class="rv d1">Income inequality &amp; solar access</h2>
+        <p class="lead rv d2" style="font-size:1rem; margin-bottom:1rem;">Median household income from US Census ACS, correlated with solar adoption rates by census tract.</p>
+        <div class="leg-panel rv d3">
+          <div>
+            <div class="leg-head">Income (median HH)</div>
+            <div class="leg-rows">
+              <div class="leg-row"><div class="swatch" style="background:#f7fcf5;"></div>&lt; $30k</div>
+              <div class="leg-row"><div class="swatch" style="background:#c7e9c0;"></div>$30k – $60k</div>
+              <div class="leg-row"><div class="swatch" style="background:#74c476;"></div>$60k – $100k</div>
+              <div class="leg-row"><div class="swatch" style="background:#238b45;"></div>$100k – $150k</div>
+              <div class="leg-row"><div class="swatch" style="background:#00441b;"></div>$150k+</div>
+            </div>
+          </div>
+          <div>
+            <div class="leg-head">Solar adoption rate</div>
+            <div class="leg-rows">
+              <div class="leg-row"><div class="swatch" style="background:#fff7bc;"></div>Low</div>
+              <div class="leg-row"><div class="swatch" style="background:#ffd803;"></div>Medium</div>
+              <div class="leg-row"><div class="swatch" style="background:#ff8906;"></div>High</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ↓ REPLACE WITH REAL CHOROPLETH MAP -->
+      <div class="ph rv d1" style="height:78vh;">
+        [ CHOROPLETH MAP ]<br><br>
+        Census tract level · Mapbox<br>
+        Income vs Solar adoption overlay
+      </div>
+    </div>
+  </div>
+  <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
+</body>
+</html>
