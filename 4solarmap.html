@@ -5,58 +5,396 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Solar Map</title>
   <link rel="stylesheet" href="shared.css" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
   <style>
-    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; background: var(--cyan-light); }
-    body::-webkit-scrollbar { display: none; }
-    body { display: flex; align-items: center; padding: 40px 0; }
-    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
-    .smap-grid { display: grid; grid-template-columns: 320px 1fr; gap: 3rem; align-items: start; }
-    .ph { width: 100%; height: 100% !important; margin: 0; }
-    .smap-side { display: flex; flex-direction: column; gap: 0.8rem; padding-top: 2rem; align-items: flex-start; }
-    .toggle-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.8rem; width: 100%; }
+    html, body { height: 100%; overflow: hidden; background: var(--cyan-light); }
+    body { display: flex; align-items: stretch; }
+
+    /* ── LAYOUT ── */
+    .smap-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      width: 100%; height: 100%;
+    }
+
+    /* ── LEFT PANEL ── */
+    .smap-panel {
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      overflow-y: auto;
+      border-right: 2.5px solid var(--headline);
+      background: var(--cyan-light);
+    }
+    .smap-panel h2 { font-size: 1.6rem; line-height: 1.15; }
+
+    /* Layer toggle */
+    .layer-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .layer-label {
+      font-weight: 700; font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--headline); margin-bottom: 0.2rem;
+    }
     .t-btn {
-      width: 100%; max-width: 280px; 
-      font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
-      padding: 1rem 1.2rem;
+      font-weight: 700; font-size: 0.8rem;
+      padding: 0.65rem 1rem;
       border: 2px solid var(--headline); border-radius: 6px;
       color: var(--headline); background: var(--bg);
-      cursor: pointer; text-align: left; transition: all 0.2s;
+      cursor: pointer; text-align: left; transition: all 0.18s;
+      display: flex; align-items: center; gap: 0.6rem;
     }
-    .t-btn:hover { background: var(--cyan-dark); transform: translateX(4px); }
-    .t-btn.active { background: var(--yellow); box-shadow: 3px 3px 0px var(--headline); transform: translateX(4px); }
+    .t-btn:hover { background: var(--cyan-dark); }
+    .t-btn.active {
+      background: var(--yellow);
+      box-shadow: 3px 3px 0px var(--headline);
+      transform: translateX(3px);
+    }
+    .t-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%; border: 2px solid var(--headline);
+      flex-shrink: 0;
+    }
+
+    /* Legend */
+    .legend-box {
+      background: var(--bg); border: 2px solid var(--headline);
+      border-radius: 8px; padding: 1rem;
+      box-shadow: 3px 3px 0px var(--headline);
+    }
+    .legend-title { font-weight: 700; font-size: 0.72rem; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .legend-bar {
+      height: 12px; border-radius: 3px; border: 1.5px solid var(--headline);
+      margin-bottom: 0.4rem;
+    }
+    .legend-labels { display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; }
+    .legend-steps { display: flex; flex-direction: column; gap: 0.4rem; }
+    .legend-step { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem; font-weight: 500; }
+    .legend-swatch { width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid var(--headline); flex-shrink: 0; }
+
+    /* Tooltip popup */
+    .mapboxgl-popup-content {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border: 2px solid var(--headline);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0px var(--headline);
+      padding: 0.9rem 1.1rem;
+      min-width: 200px;
+    }
+    .popup-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem; border-bottom: 2px solid var(--headline); padding-bottom: 0.4rem; }
+    .popup-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; }
+    .popup-val { font-weight: 700; color: var(--orange); }
+    .mapboxgl-popup-close-button {
+      right: 8px;
+      top: 8px;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 2px 6px;
+    }
+
+    /* ── MAP ── */
+    #map { flex: 1; width: 100%; }
+    .mapboxgl-ctrl-attrib { font-size: 0.65rem !important; }
   </style>
 </head>
 <body>
-  <div class="page-inner">
-    <div class="smap-grid">
-      <div class="smap-side">
-        <div class="tag rv">03 · Solar Map</div>
-        <h2 class="rv d1">Solar distribution across NYC</h2>
-        <p class="lead rv d2">Interactive Mapbox map showing solar project locations by status. Toggle layers to explore where solar is taking root.</p>
-        <div class="toggle-list rv d3">
-          <button class="t-btn active" onclick="filterMap(this,'all')">● All projects</button>
-          <button class="t-btn" onclick="filterMap(this,'completed')">● Completed</button>
-          <button class="t-btn" onclick="filterMap(this,'progress')">● In Progress</button>
-          <button class="t-btn" onclick="filterMap(this,'ready')">● Solar Ready</button>
-        </div>
-      </div>
+<div class="smap-layout">
 
-      <!-- ↓ REPLACE WITH REAL MAPBOX MAP -->
-      <div class="ph rv d1" style="height:78vh;">
-        [ INTERACTIVE MAPBOX MAP ]<br><br>
-        Solar project locations<br>
-        Status filter · Year slider
-      </div>
+  <!-- LEFT PANEL -->
+  <div class="smap-panel">
+    <div>
+      <div class="tag rv">03 · Solar Map</div>
+      <h2 class="rv d1">Solar distribution<br>across NYC</h2>
+      <p class="rv d2" style="font-size:0.88rem; line-height:1.6; font-weight:500;">
+        Google Project Sunroof data at census tract level. Toggle between layers to explore different dimensions of NYC's solar landscape.
+      </p>
+      <p id="layer-desc" style="font-size:0.88rem; line-height:1.6; font-weight:500;">
+        Number of solar installations already built in each census tract. Most tracts have zero — highlighting where adoption has actually happened.
+      </p>
     </div>
+
+    <!-- Layer selector -->
+    <div class="layer-group rv d3">
+      <div class="layer-label">View layer</div>
+      <button class="t-btn active" data-layer="installs">
+        <span class="t-dot" style="background:#ff8906;"></span>
+        Existing installations
+      </button>
+      <button class="t-btn" data-layer="qualified">
+        <span class="t-dot" style="background:#74c476;"></span>
+        % Roof area qualified
+      </button>
+      <button class="t-btn" data-layer="sunlight">
+        <span class="t-dot" style="background:#bae8e8;"></span>
+        Annual sunlight (kWh)
+      </button>
+    </div>
+
+    <!-- Legend (updates with layer) -->
+    <div class="legend-box rv d4" id="legend-box">
+      <div class="legend-title" id="legend-title">Existing Solar Installations</div>
+      <div id="legend-content"></div>
+    </div>
+
+    <p style="font-size:0.7rem; font-weight:500; color:var(--headline); opacity:0.5; margin-top:auto;">
+      Source: Google Project Sunroof ·<br>NYC Census Tracts 2020
+    </p>
   </div>
-  <script>
-    window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));
-    function filterMap(btn, layer) {
-      document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      // TODO: hook up real Mapbox layer filter
-      console.log('Filter:', layer);
+
+  <!-- MAP -->
+  <div id="map"></div>
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────
+  mapboxgl.accessToken = 'pk.eyJ1IjoiamllNDIwIiwiYSI6ImNtb2owZnh0djA2MjMycXM2MHo5cHp0MDkifQ.NW2bPSF1lxeu9SsJhCjxGg';
+
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v11',
+    center: [-73.97, 40.71],
+    zoom: 10,
+    minZoom: 9,
+    maxZoom: 15,
+  });
+
+  map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+  // ── LAYER DEFINITIONS ────────────────────────────────────
+  const layers = {
+    installs: {
+      label: 'Existing Solar Installations',
+      desc: 'Number of solar installations already built in each census tract. Most tracts have zero — highlighting where adoption has actually happened.',
+      property: 'existing_installs',
+      // p50=0, p90=1, p95=3, max=45
+      // log-like manual breaks to handle heavy zero-skew
+      stops: [0, 1, 3, 8, 20, 45],
+      colors: ['#f7f7f7','#fee8c8','#fdbb84','#e34a33','#b30000','#7f0000'],
+      legendType: 'steps',
+      labels: ['0', '1 – 2', '3 – 7', '8 – 19', '20 – 44', '45+'],
+      unit: 'installs',
+    },
+    qualified: {
+      label: '% Roof Area Solar-Qualified',
+      desc: 'Percentage of rooftop area with sufficient size and sunlight to support solar panels, regardless of whether panels are installed.',
+      property: 'percent_qualified',
+      stops: [0, 50, 65, 75, 85, 100],
+      colors: ['#f7fcf5','#c7e9c0','#74c476','#31a354','#006d2c','#00441b'],
+      legendType: 'gradient',
+      labels: ['0%', '50%', '100%'],
+      unit: '%',
+    },
+    sunlight: {
+      label: 'Annual Sunlight (kWh median)',
+      desc: 'Median annual solar energy generation potential per tract, based on roof orientation and local sunlight conditions.',
+      property: 'yearly_sunlight_kwh',
+      stops: [0, 8000, 10000, 12000, 14000, 17000],
+      colors: ['#ffffd9','#edf8b1','#c7e9b4','#41b6c4','#1d91c0','#0c2c84'],
+      legendType: 'gradient',
+      labels: ['<8k kWh', '12k kWh', '17k+ kWh'],
+      unit: 'kWh',
+    },
+  };
+
+  let currentLayer = 'installs';
+  let popup = null;
+
+  // ── MAP LOAD ─────────────────────────────────────────────
+  map.on('load', () => {
+    map.addSource('solar', {
+      type: 'geojson',
+      data: 'data/nyc_solar.geojson',
+    });
+
+    // Borough boundary source
+    map.addSource('boroughs', {
+      type: 'geojson',
+      data: 'data/nyc_boroughs.geojson',
+    });
+
+    map.addSource('borough-points', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: [
+          { type: 'Feature', geometry: { type: 'Point', coordinates: [-73.977, 40.760] }, properties: { boroname: 'MANHATTAN' } },
+          { type: 'Feature', geometry: { type: 'Point', coordinates: [-73.867, 40.853] }, properties: { boroname: 'BRONX' } },
+          { type: 'Feature', geometry: { type: 'Point', coordinates: [-73.950, 40.645] }, properties: { boroname: 'BROOKLYN' } },
+          { type: 'Feature', geometry: { type: 'Point', coordinates: [-73.820, 40.706] }, properties: { boroname: 'QUEENS' } },
+          { type: 'Feature', geometry: { type: 'Point', coordinates: [-74.153, 40.581] }, properties: { boroname: 'STATEN ISLAND' } },
+        ]
+      }
+    });
+
+    // Fill layer (choropleth)
+    map.addLayer({
+      id: 'solar-fill',
+      type: 'fill',
+      source: 'solar',
+      paint: {
+        'fill-color': buildColorExpr('installs'),
+        'fill-opacity': 0.82,
+      },
+    });
+
+    // Outline layer
+    map.addLayer({
+      id: 'solar-outline',
+      type: 'line',
+      source: 'solar',
+      paint: {
+        'line-color': '#2b2c34',
+        'line-width': 0.2,
+        'line-opacity': 0.18,
+      },
+    });
+
+    // Hover highlight
+    map.addLayer({
+      id: 'solar-hover',
+      type: 'fill',
+      source: 'solar',
+      paint: {
+        'fill-color': '#2b2c34',
+        'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.15, 0],
+      },
+    });
+
+    // Borough boundary — bold outline
+    map.addLayer({
+      id: 'borough-outline',
+      type: 'line',
+      source: 'boroughs',
+      paint: {
+        'line-color': '#2b2c34',
+        'line-width': 1.2,
+        'line-opacity': 0.7,
+      },
+    });
+
+    // Borough name labels
+    map.addLayer({
+      id: 'borough-labels',
+      type: 'symbol',
+      source: 'borough-points',
+      layout: {
+        'text-field': ['get', 'boroname'],
+        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size': 13,
+        'text-letter-spacing': 0.12,
+        'text-allow-overlap': true,
+      },
+      paint: {
+        'text-color': '#aaaaaa',
+        'text-halo-color': 'rgba(255,255,255,0.7)',
+        'text-halo-width': 2,
+      },
+    });
+
+    renderLegend('installs');
+    setupInteractions();
+  });
+
+  // ── COLOR EXPRESSION ─────────────────────────────────────
+  function buildColorExpr(layerKey) {
+    const { property, stops, colors } = layers[layerKey];
+    const step = ['step', ['get', property], colors[0]];
+    for (let i = 1; i < stops.length; i++) {
+      step.push(stops[i], colors[i]);
     }
-  </script>
+    return ['case', ['==', ['get', property], null], '#e0e0e0', step];
+  }
+
+  function switchLayer(layerKey) {
+    currentLayer = layerKey;
+    map.setPaintProperty('solar-fill', 'fill-color', buildColorExpr(layerKey));
+    renderLegend(layerKey);
+
+    document.getElementById('layer-desc').textContent = layers[layerKey].desc;
+
+    document.querySelectorAll('.t-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.layer === layerKey);
+    });
+  }
+
+  // ── LEGEND ───────────────────────────────────────────────
+  function renderLegend(layerKey) {
+    const lyr = layers[layerKey];
+    document.getElementById('legend-title').textContent = lyr.label;
+    const el = document.getElementById('legend-content');
+
+    if (lyr.legendType === 'gradient') {
+      const grad = `linear-gradient(to right, ${lyr.colors.join(',')})`;
+      el.innerHTML = `
+        <div class="legend-bar" style="background:${grad};"></div>
+        <div class="legend-labels">
+          ${lyr.labels.map(l => `<span>${l}</span>`).join('')}
+        </div>`;
+    } else {
+      el.innerHTML = `<div class="legend-steps">
+        ${lyr.stops.map((s, i) => `
+          <div class="legend-step">
+            <div class="legend-swatch" style="background:${lyr.colors[i]};"></div>
+            <span>${lyr.labels[i]}</span>
+          </div>`).join('')}
+      </div>`;
+    }
+  }
+
+  // ── INTERACTIONS ─────────────────────────────────────────
+  function setupInteractions() {
+    let hoveredId = null;
+
+    map.on('mousemove', 'solar-fill', e => {
+      map.getCanvas().style.cursor = 'pointer';
+      if (hoveredId !== null) map.setFeatureState({ source: 'solar', id: hoveredId }, { hover: false });
+      hoveredId = e.features[0].id;
+      map.setFeatureState({ source: 'solar', id: hoveredId }, { hover: true });
+    });
+
+    map.on('mouseleave', 'solar-fill', () => {
+      map.getCanvas().style.cursor = '';
+      if (hoveredId !== null) map.setFeatureState({ source: 'solar', id: hoveredId }, { hover: false });
+      hoveredId = null;
+    });
+
+    map.on('click', 'solar-fill', e => {
+      const p = e.features[0].properties;
+      if (popup) popup.remove();
+
+      const installs = p.existing_installs ?? 'N/A';
+      const pq       = p.percent_qualified != null ? p.percent_qualified + '%' : 'N/A';
+      const sun      = p.yearly_sunlight_kwh != null ? Math.round(p.yearly_sunlight_kwh).toLocaleString() + ' kWh' : 'N/A';
+      const carbon   = p.carbon_offset != null ? Math.round(p.carbon_offset).toLocaleString() + ' t' : 'N/A';
+      const boro     = p.boroname ?? '';
+      const nta      = p.ntaname  ?? '';
+
+      popup = new mapboxgl.Popup({ closeButton: true, maxWidth: '260px' })
+        .setLngLat(e.lngLat)
+        .setHTML(`
+          <div class="popup-title">${nta}</div>
+          <div style="font-size:0.75rem;opacity:0.6;margin-bottom:0.5rem;">${boro}</div>
+          <div class="popup-row"><span>Existing installs</span><span class="popup-val">${installs}</span></div>
+          <div class="popup-row"><span>Roof % qualified</span><span class="popup-val">${pq}</span></div>
+          <div class="popup-row"><span>Annual sunlight</span><span class="popup-val">${sun}</span></div>
+          <div class="popup-row"><span>Carbon offset pot.</span><span class="popup-val">${carbon}</span></div>
+        `)
+        .addTo(map);
+    });
+  }
+
+  // ── BUTTON CLICK ─────────────────────────────────────────
+  document.querySelectorAll('.t-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchLayer(btn.dataset.layer));
+  });
+
+  // ── REVEAL ANIMATION ─────────────────────────────────────
+  window.addEventListener('load', () =>
+    setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80)
+  );
+</script>
 </body>
 </html>
