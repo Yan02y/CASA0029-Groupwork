@@ -8,32 +8,269 @@
   <style>
     html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
     body::-webkit-scrollbar { display: none; }
-    body { display: flex; align-items: center; padding: 40px 0; background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('images/nyc.png') center center / cover no-repeat; }
+    body { display: flex; align-items: center; padding: 40px 0; background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('images/community-solar.jpg') center center / cover no-repeat; }
     .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
+    .chart-controls { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .icon-btn { border: 2px solid #2d334a; background: white; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .icon-btn img { width: 30px; height: 30px; }
+    .icon-btn.active { background: black; }
+    .icon-btn.active img { filter: invert(1); }
     .chart-grid { display: grid; grid-template-columns: 1fr 2.2fr; gap: 3rem; align-items: center; }
     .chart-side { display: flex; flex-direction: column; gap: 0.8rem; align-items: flex-start; padding-top: 2rem; }
+    .chart-ylabel { writing-mode:vertical-rl; transform:rotate(180deg); text-align:center; font-size:0.8rem; color:#666;}
     .stat-item { width: 100%; max-width: 320px; }
+    .chart-title:first-child { margin-top: 0; }
+    .chart-title { font-size: 0.8rem; color: #272343; margin-bottom: 0.1rem;  margin-top: 0.8rem; }
+    .chart-half { max-width: 720px ; height: 120px; }
+    .ph { background: rgba(186, 232, 232, 0.5); }
   </style>
+  <!-- Chart.js and PapaParse CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
+
 <body>
+  <!-- Main text -->
   <div class="page-inner">
     <div class="chart-grid">
       <div class="chart-side">
-        <div class="tag rv">02 · Trends</div>
+        <div class="tag rv">02 · Solar Trends</div>
         <h2 class="rv d1">Solar growth over time</h2>
-        <p class="lead rv d2" style="margin-bottom:0.5rem;">NYSERDA data tracks solar installations 2000–2026. The chart reveals how rates, costs and incentive structures evolved.</p>
-        <div class="stat-item rv d3"><div class="stat-val">7,474</div><div class="stat-lbl">Completed NYC-area projects</div></div>
-        <div class="stat-item rv d4"><div class="stat-val">3,714</div><div class="stat-lbl">Pipeline (not yet installed)</div></div>
+        <p class="lead rv d2" style="margin-bottom:0.5rem;">NYSERDA-Supported Solar Projects(not included projects larger than 5MW AC) installations 2000-2025. The charts shows the trends of Completed Solar Projects number, capacity,production and cost.</p>
+        
+        <div class="stat-item rv d3">
+          <div class="stat-val" id="statYearly">0</div>
+          <div class="stat-lbl" id="labelYearly">Yearly Projects</div>
+        </div>
+        
+        <div class="stat-item rv d4">
+          <div class="stat-val" id="statSum">0</div>
+          <div class="stat-lbl" id="labelSum">Total Projects</div>
+        </div>
       </div>
 
-      <!-- ↓ REPLACE WITH REAL CHART (D3 / Chart.js / Plotly) -->
-      <div class="ph rv d1" style="height:68vh;">
-        [ TIME-SERIES LINE CHART ]<br><br>
-        NYSERDA NY-Sun · 2000–2026<br>
-        Borough comparison · Cost decline
+      <div class="chart-right">
+        <!-- icon -->
+        <div class="chart-controls">
+          <button class="icon-btn active" onclick="switchData('Projects', this)">
+            <img src="images/icons/projects.png">
+          </button>
+          <button class="icon-btn" onclick="switchData('Capacity', this)">
+            <img src="images/icons/capacity.png">
+          </button>
+          <button class="icon-btn" onclick="switchData('Production', this)">
+            <img src="images/icons/production.png">
+          </button>
+          <button class="icon-btn" onclick="switchData('Cost', this)">
+            <img src="images/icons/cost.png">
+          </button>
+        </div>
+
+        <!-- Charts -->
+        <div class="ph rv d1 chart-stack">
+          <div class="chart-title" id="chartTitle1"></div>
+          <div class="chart-half">
+            <canvas id="chart1"></canvas>
+          </div>
+          <div class="chart-title" id="chartTitle2"></div>
+          <div class="chart-half">
+            <canvas id="chart2"></canvas>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
+
+  <script>
+    let chart1, chart2, rawData;
+    let currentData = { d1: [], d2: [] };
+
+      // read CSV
+      async function loadCSV() {
+        const res = await fetch('./data/NYSUN_yearly.csv');
+        const text = await res.text();
+
+        return new Promise(resolve => {
+          Papa.parse(text, {
+            header: true,
+            complete:r=>{
+              const clean = r.data
+                .filter(d=>d["Year of Date Completed"])
+                .map(d=>({
+                  year:+d["Year of Date Completed"],
+                  yearly_projects:+String(d["Number of Projects"]).replace(/,/g,''),
+                  sum_projects:+String(d["Running Sum of Number of Projects"]).replace(/,/g,''),
+                  yearly_capacity:+String(d["Total Nameplate (kW DC)"]).replace(/,/g,''),
+                  sum_capacity:+String(d["Running Sum of Total Nameplate (kW DC)"]).replace(/,/g,''),
+                  yearly_production:+String(d["Expected Production (GWh)"]).replace(/,/g,''),
+                  sum_production:+String(d["Running Sum of Expected Production (GWh)"]).replace(/,/g,''),
+                  incentive:+d["Incentive per Watt"],
+                  cost:+d["Cost per Watt"]
+                }));
+              resolve(clean);
+            }
+          });
+        });
+      }
+
+      // chart options 
+      function makeOptions(unit) {
+        return {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          elements: { point: { radius: 3, hoverRadius: 6 } },
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: unit,           
+              align: 'start',       
+              color: '#999',
+              font: { size: 11, weight: 'normal' },
+              padding: { bottom: 4 }
+            }
+          },
+          scales: {                          
+            x: { ticks: { color: '#2d334a' } },
+            y: { ticks: { color: '#2d334a' } }
+          }
+        };
+      }
+
+      // create charts
+      function createCharts() {
+        const defaultColor = '#272343';
+        const common = { ... makeOptions(''), onHover: (e, el) => sync(el, chart2) };
+        
+        chart1 = new Chart(document.getElementById('chart1'), {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: 'Yearly', data: [], borderColor: defaultColor, pointBackgroundColor: defaultColor }] },
+          options: {
+            ...makeOptions(''),
+            onHover: (e, el) => sync(el, chart2)
+          }
+        });
+
+        chart2 = new Chart(document.getElementById('chart2'), {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: 'Sum', data: [], borderColor: defaultColor, pointBackgroundColor: defaultColor }] },
+          options: {
+            ...makeOptions(''),
+            onHover: (e, el) => sync(el, chart1),
+          }
+        });
+
+      }
+
+      // Hover sync 
+      function sync(elements,target){
+        if (!elements.length) {
+          const last = currentData.d1.length - 1;
+          document.getElementById('statYearly').innerText = currentData.d1[last].toLocaleString();
+          document.getElementById('statSum').innerText = currentData.d2[last].toLocaleString();
+          [chart1, chart2].forEach(c => {
+            c.setActiveElements([]);
+            c.tooltip.setActiveElements([], {});
+            c.update('none');
+          });
+          return;
+        }
+        // Get the index of the hovered element
+        const i = elements[0].index;
+        target.setActiveElements([{ datasetIndex: 0, index: i }]);
+        target.tooltip.setActiveElements([{ datasetIndex: 0, index: i }], {});
+        target.update('none');
+        document.getElementById('statYearly').innerText = currentData.d1[i].toLocaleString();
+        document.getElementById('statSum').innerText = currentData.d2[i].toLocaleString();
+     
+      }
+      
+      // update charts 
+      function updateCharts(mode) {
+        const labels = rawData.map(d => d.year);
+        let d1, d2;
+
+        if (mode === 'Projects') {
+          d1 = rawData.map(d=>d.yearly_projects);
+          d2 = rawData.map(d => d.sum_projects);
+        } else if (mode === 'Capacity') {
+          d1 = rawData.map(d => d.yearly_capacity);
+          d2 = rawData.map(d => d.sum_capacity);
+        } else if (mode === 'Production') {
+          d1 = rawData.map(d => d.yearly_production);
+          d2 = rawData.map(d => d.sum_production);
+        } else {
+          d1 = rawData.map(d => d.incentive);
+          d2 = rawData.map(d => d.cost);
+        }
+
+        chart1.data.labels = labels;
+        chart1.data.datasets[0].data = d1;
+        chart2.data.labels = labels;
+        chart2.data.datasets[0].data = d2;
+
+        chart1.update();
+        chart2.update();
+
+        currentData = { d1, d2 };
+      }
+
+      // label map 
+      const labelMap = {
+        Projects:   { labels: ['Number of Projects',         'Running Sum of Number of Projects'],         units: ['(count)', '(count)'], color: '#ffd803' },
+        Capacity:   { labels: ['Total Nameplate',             'Running Sum of Total Nameplate'],             units: ['(kW DC)', '(kW DC)'], color: '#ffa700' },
+        Production: { labels: ['Expected Production',         'Running Sum of Expected Production'],         units: ['(GWh)',   '(GWh)'],   color: '#ff8906' },
+        Cost:       { labels: ['Incentive per Watt',          'Cost per Watt'],                              units: ['($/W)',   '($/W)'],   color: '#272343' }
+      };
+
+      // switch data
+      function switchData(mode,el){
+        updateCharts(mode);
+
+        document.querySelectorAll('.icon-btn').forEach(b=>b.classList.remove('active'));
+        el.classList.add('active');
+
+        const { labels, units, color } = labelMap[mode];
+
+        // chart titles
+        document.getElementById('chartTitle1').innerText = labels[0]; 
+        document.getElementById('chartTitle2').innerText = labels[1];
+
+        // chart colors
+        [chart1, chart2].forEach((c, i) => {
+          c.options.plugins.title.text = units[i];
+          c.data.datasets[0].borderColor = color;
+          c.data.datasets[0].pointBackgroundColor = color;
+          c.update();
+        });
+
+        // reset stat
+        document.getElementById('labelYearly').innerText = labels[0];
+        document.getElementById('labelSum').innerText = labels[1];
+
+        // stat color
+        document.getElementById('statYearly').style.color = color;
+        document.getElementById('statSum').style.color = color;
+
+        const last = currentData.d1.length - 1;
+        document.getElementById('statYearly').innerText = currentData.d1[last].toLocaleString();
+        document.getElementById('statSum').innerText = currentData.d2[last].toLocaleString();
+      }
+
+      // init
+      async function init() {
+        rawData = await loadCSV();
+        createCharts();
+        switchData('Projects', document.querySelector('.icon-btn'));
+      }
+      init();
+
+
+  window.addEventListener('load', () => 
+    setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80)
+  );
+  
+  </script>
 </body>
 </html>
