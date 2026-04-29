@@ -1,0 +1,6 @@
+borough,housing_units,area_km2,housing_density_per_km2,source,year
+Manhattan,894318,59.13,15124,US Census Bureau ACS 5-Year Estimates,2020
+Bronx,521597,109.04,4784,US Census Bureau ACS 5-Year Estimates,2020
+Brooklyn,1051856,183.42,5735,US Census Bureau ACS 5-Year Estimates,2020
+Queens,892487,281.09,3175,US Census Bureau ACS 5-Year Estimates,2020
+Staten Island,179179,151.18,1185,US Census Bureau ACS 5-Year Estimates,2020
