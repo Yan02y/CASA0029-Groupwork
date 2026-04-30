@@ -1,7 +1,37 @@
-# Renewable Inequality in Vertical New York City
-## How building density and income shape solar energy adoption across spatial scales
-## Data Source
-* Building Footprints (Map): https://data.cityofnewyork.us/City-Government/Building-Footprints-Map-/jh45-qr5r
-* City of New York Municipal Solar-Readiness Assessment (Local Law 24 of 2016) data: https://data.cityofnewyork.us/City-Government/City-of-New-York-Municipal-Solar-Readiness-Assessm/cfz5-6fvh/about_data
-* United States Census Bureau: https://data.census.gov/table?q=United+States&t=Income+(Households,+Families,+Individuals):Populations+and+People&g=010XX00US_040XX00US36
-* NYSERDA-Supported Solar Projects: https://www.nyserda.ny.gov/All-Programs/NY-Sun/Solar-Data-Maps/NYSERDA-Supported-Solar-Projects
+# Project Methodology Summary 
+## Introduction and Research Question
+This project investigates how building density, building height, and income affect solar energy adoption across New York City. Specially, by using spatial data and visual analytics, we aim to uncover the inequalities in the urban energy transition. Therefore, this report will summarize the datasets used and the development methods.
+## Data
+### Solar Data：
+City of New York Municipal Solar-Readiness Assessment data
+NYSERDA-Supported Solar Projects
+Raw solar data was processed in Python to extract key indicators, correct unit inconsistencies, and aggregate values by census tract prior to spatial joining.
+### Building Data：
+NYC Building Footprints
+Building Density data from 2020 Census data
+Relevant fields relating to building density and height were selected for further analysis.
+### 2020 Census Data：
+Total population
+Income - Median Earnings for past 12 months (Over 25 years work people)
+Education - Educational Attainment Distribution(Over 25 years)
+Required fields were selected and converted to numeric format using Python.
+### Geographic Data：
+2020 Census Tracts / 2020 Neighborhood Tabulation Areas (NTAs)
+Mapbox GL JS
+All filtered and cleaned indicator fields were left-joined to the GeoJSON boundary data using the geocode as the same column , enabling precise alignment between attribute data and spatial geometry.
+## Web Framework
+The project is delivered as a static website built using vanilla HTML, CSS, and JavaScript without relying on external frontend frameworks. This approach was chosen to maintain full control over the codebase and ensure compatibility with static hosting environments. A shared CSS file (shared.css) serves as the project's centralised design system, defining a consistent colour palette, typographic hierarchy using DM Sans and Playfair Display from Google Fonts, reusable component styles including cards, tags, and navigation elements, and CSS-based entrance animations applied on page load. Each page of the site is structured as a self-contained HTML file corresponding to a distinct section of the project narrative, from policy motivation through to spatial analysis and findings. Navigation between pages is managed by a custom JavaScript sidebar embedded in the index page, which loads each section without iframes to preserve performance. Background imagery for the landing and introductory pages was generated using AI image tools to produce visuals consistent with the project's urban aesthetic.
+## Visalization
+### Line Chart
+The Solar Trends page visualises NYSERDA solar project data from 2000 to 2025 using Chart.js, presenting two synchronised line charts that track both annual and cumulative values across switchable metrics: project count, installed capacity, expected production, and incentive and cost per watt. Users can toggle between metrics via icon buttons, with chart colours, axis labels, and stat counters will update simultaneously, also ensuring consistent display colors across all metrics. Hovering over either chart triggers real-time cross-chart synchronisation, highlighting the corresponding year across both charts while refreshing the summary statistics in the left panel. Chart data is parsed client-side from a CSV file using PapaParse, which was verified and reorganized from the original NYSERDA dataset (NYSUN Visual Update).
+### Solar Distribution Map
+The Solar Map is one of the project's primary spatial visualizations, built with Mapbox GL JS (v3.3.0) using a light-themed basemap. It integrates two datasets presented across four toggleable layers. The first dataset — the NYC Municipal Solar-Readiness Assessment (Local Law 24 of 2016) — is rendered as a point layer colour-coded by installation status (Completed, In Progress, or Solar-Ready), enabling site-level exploration of municipal buildings including attributes such as annual energy production (kWh). The second dataset — Google Project Sunroof — is joined to 2020 Census Tract boundaries via unique tract IDs to produce two choropleth layers: Percentage of Qualified Roof Area, and Annual Sunlight (kWh/m²). Data pre-processing involved merging the Project Sunroof CSV records with the census tract GeoJSON using tract ID as the join key, then encoding the merged output as a single GeoJSON file for direct loading into Mapbox. Each choropleth layer uses a sequential colour scale with five classification breaks to highlight spatial variation across boroughs. The interactive left panel allows users to switch between all four views, with legends updating dynamically in response to layer selection. Click-activated popups display attribute values for individual features. AI-assisted scripting was used to support the data joining workflow and to refine the JavaScript logic for the toggle panel, dynamic legends, and popup interactions.
+### Urban Morphology Interactive Map
+This section introduces the core technology and methods for the Urban Morphology interactive map. Firstly, we prepared and matched the spatial data. The map uses 262 neighborhoods in New York City as basic units. We matched nearly one million buildings to these neighborhoods using Spatial Join. We also removed abnormal building heights over 5000 feet. Then, we calculated the housing density and average roof height to build a solid data foundation. 
+Second, we created 3D rendering and visual effects based on our practical tutorials. To load the large city model smoothly, we used Vector Tiles technology. Solar energy production varies greatly across different areas. Therefore, we used an Exponential Interpolation algorithm to set the heights of the 3D columns. This ensures low-yield areas are still visible. We also added a blur effect at the bottom of the columns to simulate a glowing energy effect. 
+Finally, we designed smooth page interactions. A 500-millisecond transition allows a seamless switch between the density and height base maps. The map also features deep exploration. When users hover over the map, they can see the total energy of a neighborhood. They can also check the exact annual energy production of individual buildings. This greatly improves the data exploration experience.
+### Census
+The Census Dashboard page is built as a single-page full-screen layout using CSS Grid, dividing the interface into three sections: a sidebar with five icons, a central Mapbox GL JS choropleth map, and a fixed right data panel. The sidebar offers five thematic layers: solar estimated annual production, solar emissions reduction, population, Median Earnings, and education (each toggling map layer visibility on clicks). The map data is derived from filtered and cleaned 2020 NYC Census tract-level data, joined with census tract boundary files and processed through QGIS for spatial matching and styling before being published to Mapbox. As the cursor moves across the map, a highlight border dynamically renders around the currently hovered census tract, providing clear visual feedback of the selected area. 
+The right panel is divided into two sections: the upper dark area contains a brief page introduction and a live display of estimated annual solar production; the lower yellow area shows total population data, accompanied by an SVG donut chart that visually illustrates the distribution of educational attainment. Regardless of which map layer is selected, the data types displayed in the right panel remain consistent, allowing users to compare relationships across different variables. 
+### Findings and Reflection
+In conclusion, this project shows how advanced digital tools can manage large urban datasets. Overall, by using 3D visualization and interactive web maps, it clearly reveals the link between building structures, social factors, and solar potential. Modern technology provides a powerful way to guide a fairer green city transition. 
