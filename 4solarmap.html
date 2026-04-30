@@ -71,7 +71,8 @@
     .legend-labels { display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; }
     .legend-steps { display: flex; flex-direction: column; gap: 0.4rem; }
     .legend-step { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem; font-weight: 500; }
-    .legend-swatch { width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid var(--headline); flex-shrink: 0; }
+    .legend-swatch { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--headline); flex-shrink: 0; }
+    .legend-circle-row { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem; font-weight: 500; margin: 0.3rem 0; }
 
     /* Tooltip popup */
     .mapboxgl-popup-content {
@@ -88,11 +89,8 @@
     .popup-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; }
     .popup-val { font-weight: 700; color: var(--orange); }
     .mapboxgl-popup-close-button {
-      right: 8px;
-      top: 8px;
-      font-size: 1.1rem;
-      line-height: 1;
-      padding: 2px 6px;
+      right: 8px; top: 8px;
+      font-size: 1.1rem; line-height: 1; padding: 2px 6px;
     }
 
     /* ── MAP ── */
@@ -106,22 +104,26 @@
   <!-- LEFT PANEL -->
   <div class="smap-panel">
     <div>
-      <div class="tag rv">03 · Solar Map</div>
+      <div class="tag rv">04 · Solar Map</div>
       <h2 class="rv d1">Solar distribution<br>across NYC</h2>
       <p class="rv d2" style="font-size:0.88rem; line-height:1.6; font-weight:500;">
-        Google Project Sunroof data at census tract level. Toggle between layers to explore different dimensions of NYC's solar landscape.
+        NYC municipal solar installations and Project Sunroof census-tract data. Toggle between layers to explore different dimensions of NYC's solar landscape.
       </p>
       <p id="layer-desc" style="font-size:0.88rem; line-height:1.6; font-weight:500;">
-        Number of solar installations already built in each census tract. Most tracts have zero — highlighting where adoption has actually happened.
+        NYC municipal buildings with solar installations or readiness assessments. Points show status: completed, in progress, or solar-ready.
       </p>
     </div>
 
     <!-- Layer selector -->
     <div class="layer-group rv d3">
       <div class="layer-label">View layer</div>
-      <button class="t-btn active" data-layer="installs">
+      <button class="t-btn active" data-layer="status">
         <span class="t-dot" style="background:#ff8906;"></span>
-        Existing installations
+        Municipal installations
+      </button>
+      <button class="t-btn" data-layer="production">
+        <span class="t-dot" style="background:#f7c948;"></span>
+        Annual production (kWh)
       </button>
       <button class="t-btn" data-layer="qualified">
         <span class="t-dot" style="background:#74c476;"></span>
@@ -133,14 +135,14 @@
       </button>
     </div>
 
-    <!-- Legend (updates with layer) -->
+    <!-- Legend -->
     <div class="legend-box rv d4" id="legend-box">
-      <div class="legend-title" id="legend-title">Existing Solar Installations</div>
+      <div class="legend-title" id="legend-title">Municipal Solar Status</div>
       <div id="legend-content"></div>
     </div>
 
     <p style="font-size:0.7rem; font-weight:500; color:var(--headline); opacity:0.5; margin-top:auto;">
-      Source: Google Project Sunroof ·<br>NYC Census Tracts 2020
+      Source: NYC Local Law 24 of 2016 ·<br>Google Project Sunroof · NYC Census Tracts 2020
     </p>
   </div>
 
@@ -165,17 +167,19 @@
 
   // ── LAYER DEFINITIONS ────────────────────────────────────
   const layers = {
-    installs: {
-      label: 'Existing Solar Installations',
-      desc: 'Number of solar installations already built in each census tract. Most tracts have zero — highlighting where adoption has actually happened.',
-      property: 'existing_installs',
-      // p50=0, p90=1, p95=3, max=45
-      // log-like manual breaks to handle heavy zero-skew
-      stops: [0, 1, 3, 8, 20, 45],
-      colors: ['#f7f7f7','#fee8c8','#fdbb84','#e34a33','#b30000','#7f0000'],
-      legendType: 'steps',
-      labels: ['0', '1 – 2', '3 – 7', '8 – 19', '20 – 44', '45+'],
-      unit: 'installs',
+    status: {
+      label: 'Municipal Solar Status',
+      desc: 'NYC municipal buildings with solar installations or readiness assessments. Points show status: completed, in progress, or solar-ready.',
+      legendType: 'dots',
+      labels: ['Completed', 'In Progress', 'Solar Ready'],
+      colors: ['#ff8906', '#3db87a', '#78cfd4'],
+    },
+    production: {
+      label: 'Estimated Annual Production (kWh)',
+      desc: 'Estimated annual solar energy production for each municipal building. Larger and darker circles indicate higher output.',
+      legendType: 'bubbles',
+      labels: ['< 50k kWh', '150k kWh', '300k+ kWh'],
+      colors: ['#ffffcc', '#fd8d3c', '#800026'],
     },
     qualified: {
       label: '% Roof Area Solar-Qualified',
@@ -185,7 +189,6 @@
       colors: ['#f7fcf5','#c7e9c0','#74c476','#31a354','#006d2c','#00441b'],
       legendType: 'gradient',
       labels: ['0%', '50%', '100%'],
-      unit: '%',
     },
     sunlight: {
       label: 'Annual Sunlight (kWh median)',
@@ -195,26 +198,28 @@
       colors: ['#ffffd9','#edf8b1','#c7e9b4','#41b6c4','#1d91c0','#0c2c84'],
       legendType: 'gradient',
       labels: ['<8k kWh', '12k kWh', '17k+ kWh'],
-      unit: 'kWh',
     },
   };
 
-  let currentLayer = 'installs';
+  let currentLayer = 'status';
   let popup = null;
 
   // ── MAP LOAD ─────────────────────────────────────────────
   map.on('load', () => {
+
+    // Project Sunroof census tract choropleth
     map.addSource('solar', {
       type: 'geojson',
       data: 'data/nyc_solar.geojson',
     });
 
-    // Borough boundary source
+    // Borough boundaries
     map.addSource('boroughs', {
       type: 'geojson',
       data: 'data/nyc_boroughs.geojson',
     });
 
+    // Borough label points
     map.addSource('borough-points', {
       type: 'geojson',
       data: {
@@ -229,22 +234,29 @@
       }
     });
 
-    // Fill layer (choropleth)
+    // Municipal solar point data
+    map.addSource('municipal', {
+      type: 'geojson',
+      data: 'data/nyc_municipal_solar.geojson',
+    });
+
+    // ── Choropleth fill (qualified / sunlight) ──
     map.addLayer({
       id: 'solar-fill',
       type: 'fill',
       source: 'solar',
+      layout: { visibility: 'none' },
       paint: {
-        'fill-color': buildColorExpr('installs'),
+        'fill-color': buildColorExpr('qualified'),
         'fill-opacity': 0.82,
       },
     });
 
-    // Outline layer
     map.addLayer({
       id: 'solar-outline',
       type: 'line',
       source: 'solar',
+      layout: { visibility: 'none' },
       paint: {
         'line-color': '#2b2c34',
         'line-width': 0.2,
@@ -252,18 +264,69 @@
       },
     });
 
-    // Hover highlight
     map.addLayer({
       id: 'solar-hover',
       type: 'fill',
       source: 'solar',
+      layout: { visibility: 'none' },
       paint: {
         'fill-color': '#2b2c34',
         'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.15, 0],
       },
     });
 
-    // Borough boundary — bold outline
+    // ── Municipal status dots ──
+    map.addLayer({
+      id: 'municipal-status',
+      type: 'circle',
+      source: 'municipal',
+      layout: { visibility: 'visible' },
+      paint: {
+        'circle-radius': 5,
+        'circle-color': [
+          'match', ['get', 'status'],
+          'Completed',   '#ff8906',
+          'In Progress', '#3db87a',
+          'Solar Ready', '#78cfd4',
+          '#cccccc'
+        ],
+        'circle-stroke-color': '#2b2c34',
+        'circle-stroke-width': 0.6,
+        'circle-opacity': 1,
+      },
+    });
+
+    // ── Annual production bubbles ──
+    map.addLayer({
+      id: 'municipal-production',
+      type: 'circle',
+      source: 'municipal',
+      filter: ['>', ['get', 'production'], 0],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-radius': [
+          'interpolate', ['linear'], ['get', 'production'],
+          0,       2,
+          50000,   4,
+          150000,  7,
+          300000,  10,
+          600000,  14,
+          1000000, 18,
+        ],
+        'circle-color': [
+          'interpolate', ['linear'], ['get', 'production'],
+          0,       '#fff176',
+          100000,  '#ffb300',
+          300000,  '#e65100',
+          600000,  '#b71c1c',
+        ],
+        'circle-stroke-color': '#2b2c34',
+        'circle-stroke-width': 0.5,
+        'circle-opacity': 0.78,
+      },
+    });
+
+    // ── Borough boundary ──
     map.addLayer({
       id: 'borough-outline',
       type: 'line',
@@ -275,7 +338,7 @@
       },
     });
 
-    // Borough name labels
+    // ── Borough name labels ──
     map.addLayer({
       id: 'borough-labels',
       type: 'symbol',
@@ -294,11 +357,11 @@
       },
     });
 
-    renderLegend('installs');
+    renderLegend('status');
     setupInteractions();
   });
 
-  // ── COLOR EXPRESSION ─────────────────────────────────────
+  // ── COLOR EXPRESSION (choropleth) ────────────────────────
   function buildColorExpr(layerKey) {
     const { property, stops, colors } = layers[layerKey];
     const step = ['step', ['get', property], colors[0]];
@@ -308,13 +371,27 @@
     return ['case', ['==', ['get', property], null], '#e0e0e0', step];
   }
 
+  // ── SWITCH LAYER ─────────────────────────────────────────
   function switchLayer(layerKey) {
     currentLayer = layerKey;
-    map.setPaintProperty('solar-fill', 'fill-color', buildColorExpr(layerKey));
+    const isChoropleth = layerKey === 'qualified' || layerKey === 'sunlight';
+
+    // Show/hide choropleth layers
+    ['solar-fill', 'solar-outline', 'solar-hover'].forEach(id => {
+      map.setLayoutProperty(id, 'visibility', isChoropleth ? 'visible' : 'none');
+    });
+
+    // Update choropleth color
+    if (isChoropleth) {
+      map.setPaintProperty('solar-fill', 'fill-color', buildColorExpr(layerKey));
+    }
+
+    // Show/hide point layers
+    map.setLayoutProperty('municipal-status',     'visibility', layerKey === 'status'     ? 'visible' : 'none');
+    map.setLayoutProperty('municipal-production', 'visibility', layerKey === 'production' ? 'visible' : 'none');
+
     renderLegend(layerKey);
-
     document.getElementById('layer-desc').textContent = layers[layerKey].desc;
-
     document.querySelectorAll('.t-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.layer === layerKey);
     });
@@ -333,14 +410,33 @@
         <div class="legend-labels">
           ${lyr.labels.map(l => `<span>${l}</span>`).join('')}
         </div>`;
-    } else {
+
+    } else if (lyr.legendType === 'dots') {
+      // Solid colored circles for status
       el.innerHTML = `<div class="legend-steps">
-        ${lyr.stops.map((s, i) => `
+        ${lyr.labels.map((label, i) => `
           <div class="legend-step">
             <div class="legend-swatch" style="background:${lyr.colors[i]};"></div>
-            <span>${lyr.labels[i]}</span>
+            <span>${label}</span>
           </div>`).join('')}
       </div>`;
+
+    } else if (lyr.legendType === 'bubbles') {
+      // Sized + colored circles for production
+      const sizes = [8, 14, 20];
+      el.innerHTML = `
+        <div style="display:flex; align-items:flex-end; gap:1rem; margin-bottom:0.5rem;">
+          ${lyr.labels.map((label, i) => `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0.3rem;">
+              <div style="
+                width:${sizes[i]}px;height:${sizes[i]}px;
+                border-radius:50%;
+                background:${lyr.colors[i]};
+                border:1.5px solid #2b2c34;
+              "></div>
+              <span style="font-size:0.68rem;font-weight:700;text-align:center;">${label}</span>
+            </div>`).join('')}
+        </div>`;
     }
   }
 
@@ -348,42 +444,66 @@
   function setupInteractions() {
     let hoveredId = null;
 
+    // Choropleth hover
     map.on('mousemove', 'solar-fill', e => {
       map.getCanvas().style.cursor = 'pointer';
       if (hoveredId !== null) map.setFeatureState({ source: 'solar', id: hoveredId }, { hover: false });
       hoveredId = e.features[0].id;
       map.setFeatureState({ source: 'solar', id: hoveredId }, { hover: true });
     });
-
     map.on('mouseleave', 'solar-fill', () => {
       map.getCanvas().style.cursor = '';
       if (hoveredId !== null) map.setFeatureState({ source: 'solar', id: hoveredId }, { hover: false });
       hoveredId = null;
     });
 
+    // Choropleth click popup
     map.on('click', 'solar-fill', e => {
       const p = e.features[0].properties;
       if (popup) popup.remove();
-
-      const installs = p.existing_installs ?? 'N/A';
-      const pq       = p.percent_qualified != null ? p.percent_qualified + '%' : 'N/A';
-      const sun      = p.yearly_sunlight_kwh != null ? Math.round(p.yearly_sunlight_kwh).toLocaleString() + ' kWh' : 'N/A';
-      const carbon   = p.carbon_offset != null ? Math.round(p.carbon_offset).toLocaleString() + ' t' : 'N/A';
-      const boro     = p.boroname ?? '';
-      const nta      = p.ntaname  ?? '';
-
+      const pq  = p.percent_qualified != null ? p.percent_qualified + '%' : 'N/A';
+      const sun = p.yearly_sunlight_kwh != null ? Math.round(p.yearly_sunlight_kwh).toLocaleString() + ' kWh' : 'N/A';
+      const carbon = p.carbon_offset != null ? Math.round(p.carbon_offset).toLocaleString() + ' t' : 'N/A';
       popup = new mapboxgl.Popup({ closeButton: true, maxWidth: '260px' })
         .setLngLat(e.lngLat)
         .setHTML(`
-          <div class="popup-title">${nta}</div>
-          <div style="font-size:0.75rem;opacity:0.6;margin-bottom:0.5rem;">${boro}</div>
-          <div class="popup-row"><span>Existing installs</span><span class="popup-val">${installs}</span></div>
+          <div class="popup-title">${p.ntaname ?? ''}</div>
+          <div style="font-size:0.75rem;opacity:0.6;margin-bottom:0.5rem;">${p.boroname ?? ''}</div>
           <div class="popup-row"><span>Roof % qualified</span><span class="popup-val">${pq}</span></div>
           <div class="popup-row"><span>Annual sunlight</span><span class="popup-val">${sun}</span></div>
           <div class="popup-row"><span>Carbon offset pot.</span><span class="popup-val">${carbon}</span></div>
         `)
         .addTo(map);
     });
+
+    // Municipal point hover cursor
+    ['municipal-status', 'municipal-production'].forEach(layerId => {
+      map.on('mouseenter', layerId, () => map.getCanvas().style.cursor = 'pointer');
+      map.on('mouseleave', layerId, () => map.getCanvas().style.cursor = '');
+    });
+
+    // Municipal point click popup
+    function showMunicipalPopup(e) {
+      const p = e.features[0].properties;
+      if (popup) popup.remove();
+      const prod = p.production ? Number(p.production).toLocaleString() + ' kWh' : 'N/A';
+      const statusColors = { 'Completed': '#ff8906', 'In Progress': '#74c476', 'Solar Ready': '#bae8e8' };
+      const dot = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${statusColors[p.status] ?? '#ccc'};border:1px solid #2b2c34;margin-right:4px;"></span>`;
+      popup = new mapboxgl.Popup({ closeButton: true, maxWidth: '280px' })
+        .setLngLat(e.lngLat)
+        .setHTML(`
+          <div class="popup-title">${p.site}</div>
+          <div style="font-size:0.75rem;opacity:0.6;margin-bottom:0.5rem;">${p.agency} · ${p.borough}</div>
+          <div class="popup-row"><span>Status</span><span class="popup-val">${dot}${p.status}</span></div>
+          <div class="popup-row"><span>Annual production</span><span class="popup-val">${prod}</span></div>
+          <div class="popup-row"><span>Address</span><span style="font-size:0.75rem;font-weight:600;max-width:140px;text-align:right;">${p.address}</span></div>
+          <div class="popup-row"><span>Neighborhood</span><span style="font-size:0.75rem;font-weight:600;max-width:140px;text-align:right;">${p.nta}</span></div>
+        `)
+        .addTo(map);
+    }
+
+    map.on('click', 'municipal-status',     showMunicipalPopup);
+    map.on('click', 'municipal-production', showMunicipalPopup);
   }
 
   // ── BUTTON CLICK ─────────────────────────────────────────
