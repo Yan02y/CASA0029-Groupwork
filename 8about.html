@@ -10,16 +10,18 @@
     body { display: flex; flex-direction: column; }
     .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 3vw 6vw; flex: 1; }
     .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; margin-top: 1rem; }
-    .team-list { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1.5rem; }
+    .about-grid > div:first-child { display: flex; flex-direction: column; }
+    .team-list { display: flex; flex-direction: column; gap: 1.8rem; margin-top: 1.5rem; }
     .t-card {
       display: flex; align-items: center; gap: 1.2rem;
-      padding: 1rem; border: 2.5px solid var(--headline);
+      padding: 2rem; border: 2.5px solid var(--headline);
       border-radius: 8px; background: var(--bg);
       box-shadow: 4px 4px 0px var(--headline); transition: all 0.2s;
+      min-height: 120px; box-sizing: border-box;
     }
     .t-card:hover { background: var(--yellow); transform: translate(-2px,-2px); box-shadow: 6px 6px 0px var(--headline); }
     .t-av {
-      width: 52px; height: 52px;
+      width: 70px; height: 70px;
       border-radius: 50%;
       object-fit: cover;
       flex-shrink: 0;
@@ -27,44 +29,49 @@
     }
     .t-links {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       margin-top: 5px;
     }
     .t-links a {
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 10px;
+      font-size: 12px;
       color: var(--muted);
       text-decoration: none;
       transition: color 0.15s;
     }
     .t-links a:hover { color: var(--text); }
     .t-links a svg {
-      width: 12px; height: 12px;
+      width: 14px; height: 14px;
       flex-shrink: 0;
     }
-    .t-name { font-weight: 700; font-size: 1rem; color: var(--headline); }
-    .t-role { font-size: 0.85rem; font-weight: 500; margin-top: 0.2rem; }
+    .t-name { font-weight: 700; font-size: 1.25rem; color: var(--headline); }
+    .t-role { font-size: 0.9rem; font-weight: 500; margin-top: 0.2rem; }
     .src-list {
       background: var(--bg); border: 2.5px solid var(--headline);
       border-radius: 8px; box-shadow: 4px 4px 0px var(--headline);
       padding: 0 1.5rem; margin-top: 1rem;
     }
     .src-row {
-      display: flex; gap: 1rem; padding: 1.1rem 0;
+      display: flex; gap: 1.5rem; padding: 1.1rem 0;
       border-bottom: 2px dashed rgba(43,44,52,0.2);
       font-size: 0.85rem; align-items: flex-start;
     }
     .src-row:last-child { border-bottom: none; }
     .src-n {
-      font-weight: 700; font-size: 0.8rem;
+      font-weight: 700; font-size: 0.8rem; min-width: 150px;
       background: var(--yellow); border: 2px solid var(--headline);
       border-radius: 4px; color: var(--headline);
       padding: 0.2rem 0.5rem; flex-shrink: 0;
     }
     .src-row strong { display: block; font-size: 0.95rem; color: var(--headline); margin-bottom: 0.3rem; font-weight: 700; }
     .src-row span { font-size: 0.82rem; font-weight: 500; }
+    .src-row div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
     .footer-bar {
       background: var(--headline);
       padding: 1rem 3rem;
@@ -74,13 +81,13 @@
     .footer-bar span { color: var(--yellow); }
   </style>
 </head>
+
 <body>
   <div class="page-inner">
     <div class="tag rv">08 · About</div>
     <div class="about-grid">
       <div>
-        <h2 class="rv d1">Team &amp; project</h2>
-        <p class="rv d2 lead" style="margin-bottom:1rem;">CASA0029: Urban Data Visualisation<br>Centre for Advanced Spatial Analysis, UCL</p>
+        <h2 class="rv d1">Team &amp; Members</h2>
         <div class="team-list">
           <div class="t-card rv d2">
             <img class="t-av" src="images/team/S.jpg" alt="S" />
@@ -95,32 +102,92 @@
                 @email.com
               </a>
             </div>
-            <div class="t-role">Time trend chart · NYC Solar & Census Dashboard</div>
+            <div class="t-role">Time trend chart · NYC Solar & Census Dashboard · About</div>
           </div>
         </div>
 
           <div class="t-card rv d3">
             <img class="t-av" src="images/team/C.jpg" alt="C" />
-            <div><div class="t-name">Yutong Chen</div><div class="t-role">3D building map · Findings & reflection</div></div></div>
+            <div><div class="t-name">Yutong Chen</div>
+            <div class="t-links">
+              <a href="https://github.com/YutongChen003" target="_blank">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+              </a>
+              <a href="mailto:yutongchen1688@163.com">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                @email.com
+              </a>
+            </div>
+            <div class="t-role">3D building map · Findings & reflection</div></div></div>
           <div class="t-card rv d4">
             <img class="t-av" src="images/team/L.jpg" alt="L" />
-            <div><div class="t-name">Jie Liu</div><div class="t-role">Web framework · Solar distribution</div></div></div>
+            <div><div class="t-name">Jie Liu</div>
+            <div class="t-links">
+              <a href="https://github.com/jie420 " target="_blank">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+              </a>
+              <a href="mailto:jie91685@gmail.com">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                @email.com
+              </a>
+            </div>
+            <div class="t-role">Web framework · Concept · Context · Solar distribution</div></div></div>
         </div>
       </div>
       <div>
         <h2 class="rv d1" style="font-size:1.8rem;">Data sources</h2>
         <div class="src-list rv d2">
-          <div class="src-row"><span class="src-n">01</span><div><strong>NYC Building Footprints</strong><span>NYC Open Data · ~1M records (height, footprint, year built)</span></div></div>
-          <div class="src-row"><span class="src-n">02</span><div><strong>Solar-Readiness Assessment</strong><span>Local Law 24 of 2016 · Completed / In Progress / Solar Ready</span></div></div>
-          <div class="src-row"><span class="src-n">03</span><div><strong>NYSERDA NY-Sun</strong><span>7,474 completed + 3,714 pipeline · County level · 2000–2026</span></div></div>
-          <div class="src-row"><span class="src-n">04</span><div><strong>US Census Bureau ACS</strong><span>Median household income by census tract</span></div></div>
-          <div class="src-row"><span class="src-n">05</span><div><strong>Mapbox GL JS</strong><span>Base map tiles · 3D extrusion · Choropleth rendering</span></div></div>
-          <div class="src-row"><span class="src-n">06</span><div><strong>Mapbox GL JS</strong><span>Base map tiles · 3D extrusion · Choropleth rendering</span></div></div>
-        </div>
+
+  <div class="src-row">
+    <span class="src-n">01 Solar Data</span>
+    <div class="src-content">
+      <a href="https://data.cityofnewyork.us/d/cfz5-6fvh" target="_blank"><strong>City of New York Municipal Solar-Readiness Assessment data</strong></a>
+      <span>Local Law 24 of 2016 · Completed / In Progress / Solar Ready</span>
+      <a href="https://www.nyserda.ny.gov/All-Programs/NY-Sun/Solar-Data-Maps/NYSERDA-Supported-Solar-Projects" target="_blank"><strong>NYSERDA-Supported Solar Projects</strong></a>
+      <span>2000–2026 · projects larger than 5MW AC except</span>
+    </div>
+  </div>
+
+  <div class="src-row">
+    <span class="src-n">02 Building Data</span>
+    <div class="src-content">
+      <a href="https://data.cityofnewyork.us/City-Government/Building-Footprints-Map-/jh45-qr5r" target="_blank"><strong>NYC Building Footprints</strong></a>
+      <span>NYC Open Data · ~1M records (height, footprint)</span>
+      <a href="https://www.nyc.gov/content/planning/pages/resources/datasets/decennial-census" target="_blank"><strong> 2020Census Data</strong></a>
+      <span>NYC Open Data · Building Density</span>
+    </div>
+  </div>
+
+  <div class="src-row">
+    <span class="src-n">03 Census Data</span>
+    <div class="src-content">
+      <a href="https://data.census.gov/" target="_blank">
+        <strong>Filtered 2020 Census Data</strong>
+      </a>
+      <span>Total Population · Census Tract</span>
+      <span>Median Earnings · 12 months · Over 25</span>
+      <span>Educational Attainment Distribution · Over 25</span>
+    </div>
+  </div>
+
+  <div class="src-row">
+    <span class="src-n">04 Geographic Data</span>
+    <div class="src-content">
+      <a href="https://data.cityofnewyork.us/City-Government/2020-Census-Tracts/63ge-mke6/about_data" target="_blank"><strong>2020 Census Tracts</strong></a>
+      <a href="https://data.cityofnewyork.us/City-Government/2020-Neighborhood-Tabulation-Areas-NTAs-Mapped/4hft-v355" target="_blank"><strong>2020 Neighborhood Tabulation Areas (NTAs)</strong></a>
+      <span>NYC Open Data · Boundaries · Districts</span>
+      <a href="https://www.mapbox.com/" target="_blank"><strong>Mapbox GL JS</strong></a>
+      <span>Base map tiles · 3D extrusion · Choropleth rendering</span>
+    </div>
+  </div>
+
+</div>
       </div>
     </div>
   </div>
-  <div class="footer-bar">CASA0029 · Urban Data Visualisation · UCL CASA · 2025–26 &nbsp;|&nbsp; <span>Renewable Inequality in NYC</span></div>
+  <div class="footer-bar"><span>Renewable Inequality in NYC</span></div>
   <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
 </body>
 </html>
