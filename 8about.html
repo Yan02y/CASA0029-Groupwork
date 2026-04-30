@@ -72,6 +72,19 @@
       flex-direction: column;
       gap: 2px;
     }
+    .src-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+    .src-icon {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      margin-top: 16px;
+    }
     .footer-bar {
       background: var(--headline);
       padding: 1rem 3rem;
@@ -141,7 +154,10 @@
         <div class="src-list rv d2">
 
   <div class="src-row">
-    <span class="src-n">01 Solar Data</span>
+    <div class="src-left">
+      <span class="src-n">01 Solar Data</span>
+      <img src="images/icons/solar.png" class="src-icon" alt="solar" />
+    </div>
     <div class="src-content">
       <a href="https://data.cityofnewyork.us/d/cfz5-6fvh" target="_blank"><strong>City of New York Municipal Solar-Readiness Assessment data</strong></a>
       <span>Local Law 24 of 2016 · Completed / In Progress / Solar Ready</span>
@@ -151,7 +167,10 @@
   </div>
 
   <div class="src-row">
-    <span class="src-n">02 Building Data</span>
+    <div class="src-left">
+      <span class="src-n">02 Building Data</span>
+      <img src="images/icons/building.png" class="src-icon" alt="building" />
+    </div>
     <div class="src-content">
       <a href="https://data.cityofnewyork.us/City-Government/Building-Footprints-Map-/jh45-qr5r" target="_blank"><strong>NYC Building Footprints</strong></a>
       <span>NYC Open Data · ~1M records (height, footprint)</span>
@@ -161,7 +180,10 @@
   </div>
 
   <div class="src-row">
-    <span class="src-n">03 Census Data</span>
+    <div class="src-left">
+      <span class="src-n">03 Census Data</span>
+      <img src="images/icons/census.png" class="src-icon" alt="census" />
+    </div>
     <div class="src-content">
       <a href="https://data.census.gov/" target="_blank">
         <strong>Filtered 2020 Census Data</strong>
@@ -173,7 +195,10 @@
   </div>
 
   <div class="src-row">
-    <span class="src-n">04 Geographic Data</span>
+    <div class="src-left">
+      <span class="src-n">04 Geographic Data</span>
+      <img src="images/icons/geographic.png" class="src-icon" alt="geographic" />
+    </div>
     <div class="src-content">
       <a href="https://data.cityofnewyork.us/City-Government/2020-Census-Tracts/63ge-mke6/about_data" target="_blank"><strong>2020 Census Tracts</strong></a>
       <a href="https://data.cityofnewyork.us/City-Government/2020-Neighborhood-Tabulation-Areas-NTAs-Mapped/4hft-v355" target="_blank"><strong>2020 Neighborhood Tabulation Areas (NTAs)</strong></a>
