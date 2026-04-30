@@ -38,6 +38,15 @@
       font-weight: 500;
     }
     .intro p { margin: 0; }
+    .intro strong {
+      font-weight: 800 !important;
+      color: var(--headline) !important;
+      background-color: rgba(250, 174, 43, 0.4);
+      padding: 0.08em 0.35em;
+      border-radius: 3px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
 
     .concl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4rem; align-items: stretch; margin-top: 0.85rem; }
     .findings { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -123,6 +132,7 @@
     .ref-list em { color: var(--headline); font-style: italic; font-weight: 600; }
     .ref-list .doi { word-break: break-all; opacity: 0.85; }
 
+    /* Stack to single column on narrow screens */
     @media (max-width: 760px) {
       .intro, .concl-grid, .ref-list { grid-template-columns: 1fr; }
     }
@@ -131,13 +141,13 @@
 <body>
   <div class="page-inner">
     <div class="top-bar">
-      <div class="tag rv">07 · Findings</div>
+      <div class="tag rv">06 · Findings</div>
       <h2 class="rv d1">Key findings &amp; reflections</h2>
     </div>
 
     <div class="intro rv d1">
-      <p>Previous studies have shown that urban densification, building form, and compactness largely determine how much solar energy the built environment can capture (Lobaccaro and Frontini, 2014; Mohajeri et al., 2016; Morganti et al., 2017). High-density compact cities can lower per capita energy consumption and improve the ecological footprint, but changes in building form also affect solar availability on facades and rooftops (Mohajeri et al., 2016; Morganti et al., 2017). Sustainable development, however, is not only a physical and technical question. The energy transition must place justice at its core if it is to deliver fair outcomes across society (Heffron, 2022).</p>
-      <p>Guided by this literature, we examined both physical factors (building density and height) and socioeconomic variables such as household income from census data. The project uses an interactive 3D map together with a data visualization dashboard to analyze how density, height, and income in New York City shape solar energy production, and to identify spatial inequalities in the urban energy transition.</p>
+      <p>Previous studies have shown that <strong>urban densification, building form, and compactness</strong> largely determine how much solar energy the built environment can capture (Lobaccaro and Frontini, 2014; Mohajeri et al., 2016; Morganti et al., 2017). High-density compact cities can lower per capita energy consumption and improve the ecological footprint, but changes in building form also affect <strong>solar availability on facades and rooftops</strong> (Mohajeri et al., 2016; Morganti et al., 2017). Sustainable development, however, is not only a physical and technical question. The energy transition must <strong>place justice at its core</strong> if it is to deliver fair outcomes across society (Heffron, 2022).</p>
+      <p>Guided by this literature, we examined both <strong>physical factors (building density and height)</strong> and <strong>socioeconomic variables such as household income</strong> from census data. The project uses an interactive 3D map together with a data visualization dashboard to analyze how density, height, and income in New York City shape solar energy adoption, and to identify <strong>spatial inequalities in the urban energy transition</strong>.</p>
     </div>
 
     <div class="concl-grid">
@@ -153,7 +163,7 @@
           </span>
           <div>
             <h3>Density &amp; Mutual Shading</h3>
-            <p>Combining spatial and social datasets, we found that solar production is highly uneven across the city. On the physical side, high building density in compact neighborhoods causes significant mutual shading, which limits the capacity of building surfaces, especially facades, to capture solar radiation.</p>
+            <p>Combining spatial and social datasets, we found that solar adoption is highly uneven across the city. On the physical side, high building density in compact neighborhoods causes significant mutual shading, which limits the capacity of building surfaces, especially facades, to capture solar radiation.</p>
           </div>
         </div>
 
@@ -180,7 +190,7 @@
           </span>
           <div>
             <h3>Education: An Unexpected Result</h3>
-            <p>Education level, by contrast, showed little effect on solar output, which we did not expect given its assumed link to environmental awareness and production.</p>
+            <p>Education level, by contrast, showed little effect on solar output, which we did not expect given its assumed link to environmental awareness and adoption.</p>
           </div>
         </div>
       </div>
