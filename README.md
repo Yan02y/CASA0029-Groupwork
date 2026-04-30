@@ -3,21 +3,21 @@
 This project investigates how building density, building height, and income affect solar energy adoption across New York City. Specially, by using spatial data and visual analytics, we aim to uncover the inequalities in the urban energy transition. Therefore, this report will summarize the datasets used and the development methods.
 ## Data
 ### Solar Data：
-City of New York Municipal Solar-Readiness Assessment data
-NYSERDA-Supported Solar Projects
+* City of New York Municipal Solar-Readiness Assessment data
+* NYSERDA-Supported Solar Projects    
 Raw solar data was processed in Python to extract key indicators, correct unit inconsistencies, and aggregate values by census tract prior to spatial joining.
 ### Building Data：
-NYC Building Footprints
-Building Density data from 2020 Census data
+* NYC Building Footprints
+* Building Density data from 2020 Census data    
 Relevant fields relating to building density and height were selected for further analysis.
 ### 2020 Census Data：
-Total population
-Income - Median Earnings for past 12 months (Over 25 years work people)
-Education - Educational Attainment Distribution(Over 25 years)
+* Total population   
+* Income - Median Earnings for past 12 months (Over 25 years work people)
+* Education - Educational Attainment Distribution(Over 25 years)     
 Required fields were selected and converted to numeric format using Python.
 ### Geographic Data：
-2020 Census Tracts / 2020 Neighborhood Tabulation Areas (NTAs)
-Mapbox GL JS
+* 2020 Census Tracts / 2020 Neighborhood Tabulation Areas (NTAs)
+* Mapbox GL JS     
 All filtered and cleaned indicator fields were left-joined to the GeoJSON boundary data using the geocode as the same column , enabling precise alignment between attribute data and spatial geometry.
 ## Web Framework
 The project is delivered as a static website built using vanilla HTML, CSS, and JavaScript without relying on external frontend frameworks. This approach was chosen to maintain full control over the codebase and ensure compatibility with static hosting environments. A shared CSS file (shared.css) serves as the project's centralised design system, defining a consistent colour palette, typographic hierarchy using DM Sans and Playfair Display from Google Fonts, reusable component styles including cards, tags, and navigation elements, and CSS-based entrance animations applied on page load. Each page of the site is structured as a self-contained HTML file corresponding to a distinct section of the project narrative, from policy motivation through to spatial analysis and findings. Navigation between pages is managed by a custom JavaScript sidebar embedded in the index page, which loads each section without iframes to preserve performance. Background imagery for the landing and introductory pages was generated using AI image tools to produce visuals consistent with the project's urban aesthetic.
