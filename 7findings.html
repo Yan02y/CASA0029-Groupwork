@@ -8,13 +8,42 @@
   <style>
     html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
     body::-webkit-scrollbar { display: none; }
-    body { display: flex; align-items: center; padding: 40px 0; }
-    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
-    .concl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 0.8rem; }
-    .findings { display: flex; flex-direction: column; gap: 1.25rem; }
+    body { display: flex; align-items: center; padding: 22px 0; }
+    .page-inner { width: 100%; max-width: 1520px; margin: 0 auto; padding: 0 2.5vw; }
+
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 0.7rem;
+    }
+    .top-bar h2 {
+      font-size: clamp(1.25rem, 1.7vw, 1.6rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--headline);
+      margin: 0;
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 2.4rem;
+      padding: 1rem 1.3rem;
+      border: 2.5px solid var(--headline);
+      background: var(--bg);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0px var(--headline);
+      font-size: 0.86rem;
+      line-height: 1.55;
+      font-weight: 500;
+    }
+    .intro p { margin: 0; }
+
+    .concl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4rem; align-items: stretch; margin-top: 0.85rem; }
+    .findings { display: flex; flex-direction: column; gap: 0.75rem; }
     .finding {
-      display: flex; gap: 1.2rem;
-      padding: 1.25rem 1.5rem;
+      display: flex; gap: 0.95rem; align-items: flex-start;
+      padding: 0.85rem 1.15rem;
       border: 2.5px solid var(--headline);
       background: var(--bg);
       border-radius: 8px;
@@ -22,43 +51,156 @@
       transition: all 0.2s;
     }
     .finding:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0px var(--headline); }
-    .f-icon { font-size: 1.5rem; flex-shrink: 0; }
-    .finding h3 { font-size: 1.1rem; font-weight: 700; color: var(--headline); margin-bottom: 0.4rem; }
-    .finding p { font-size: 0.9rem; font-weight: 500; line-height: 1.6; }
+    .f-icon { color: var(--headline); flex-shrink: 0; margin-top: 1px; }
+    .f-icon svg { display: block; width: 26px; height: 26px; }
+    .finding h3 { font-size: 1rem; font-weight: 700; color: var(--headline); margin-bottom: 0.25rem; }
+    .finding p { font-size: 0.84rem; font-weight: 500; line-height: 1.5; }
+
     .q-block {
       background: var(--cyan-dark);
       border: 2.5px solid var(--headline);
-      border-radius: 8px; padding: 2rem;
+      border-radius: 8px; padding: 1.35rem 1.5rem;
       box-shadow: 6px 6px 0px var(--headline);
-      margin-top: 1rem;
+      display: flex; flex-direction: column;
     }
     .q-block blockquote {
-      font-weight: 700; font-size: clamp(1.1rem,1.7vw,1.35rem);
-      color: var(--headline); line-height: 1.5; margin-bottom: 1.5rem;
+      font-weight: 700; font-size: clamp(1rem, 1.4vw, 1.22rem);
+      color: var(--headline); line-height: 1.45; margin-bottom: 1rem;
     }
     .q-block cite {
-      font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
+      align-self: flex-start;
+      font-weight: 700; font-size: 0.72rem; text-transform: uppercase;
       color: var(--headline); background: var(--yellow);
       padding: 0.2rem 0.5rem; border: 2px solid var(--headline); border-radius: 4px;
+      font-style: normal; letter-spacing: 0.03em;
     }
-    .refl { margin-top: 1.5rem; font-size: 0.95rem; line-height: 1.6; font-weight: 500; }
+    .refl { margin-top: 0.9rem; font-size: 0.83rem; line-height: 1.55; font-weight: 500; }
+    .refl + .refl { margin-top: 0.6rem; }
+
+    .references {
+      margin-top: 0.85rem;
+      padding: 0.8rem 1.2rem 0.9rem;
+      border: 2.5px solid var(--headline);
+      border-left: 8px solid var(--yellow);
+      background: var(--bg);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0px var(--headline);
+    }
+    .ref-h {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--headline);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .ref-h::after {
+      content: ""; flex: 1; height: 2px; background: var(--headline); opacity: 0.18;
+    }
+    .ref-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 1.8rem; row-gap: 0.4rem;
+      list-style: none;
+      counter-reset: ref;
+      padding: 0; margin: 0;
+    }
+    .ref-list li {
+      font-size: 0.7rem;
+      line-height: 1.45;
+      padding-left: 1.1rem;
+      text-indent: -1.1rem;
+      counter-increment: ref;
+      word-break: break-word;
+    }
+    .ref-list li::before {
+      content: counter(ref) ".";
+      font-weight: 800;
+      color: var(--headline);
+      margin-right: 0.4rem;
+    }
+    .ref-list em { color: var(--headline); font-style: italic; font-weight: 600; }
+    .ref-list .doi { word-break: break-all; opacity: 0.85; }
+
+    @media (max-width: 760px) {
+      .intro, .concl-grid, .ref-list { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
   <div class="page-inner">
-    <div class="tag rv">06 · Findings</div>
+    <div class="top-bar">
+      <div class="tag rv">06 · Findings</div>
+      <h2 class="rv d1">Key findings &amp; reflections</h2>
+    </div>
+
+    <div class="intro rv d1">
+      <p>Previous studies have shown that urban densification, building form, and compactness largely determine how much solar energy the built environment can capture (Lobaccaro and Frontini, 2014; Mohajeri et al., 2016; Morganti et al., 2017). High-density compact cities can lower per capita energy consumption and improve the ecological footprint, but changes in building form also affect solar availability on facades and rooftops (Mohajeri et al., 2016; Morganti et al., 2017). Sustainable development, however, is not only a physical and technical question. The energy transition must place justice at its core if it is to deliver fair outcomes across society (Heffron, 2022).</p>
+      <p>Guided by this literature, we examined both physical factors (building density and height) and socioeconomic variables such as household income from census data. The project uses an interactive 3D map together with a data visualization dashboard to analyze how density, height, and income in New York City shape solar energy production, and to identify spatial inequalities in the urban energy transition.</p>
+    </div>
+
     <div class="concl-grid">
       <div class="findings">
-        <h2 class="rv d1">Key findings &amp; reflections</h2>
-        <div class="finding rv d2"><span class="f-icon">🏙️</span><div><h3>Density &amp; Solar Uptake</h3><p>[Key finding placeholder] — Analysis of building density per NTA and its correlation with solar installation rates.</p></div></div>
-        <div class="finding rv d3"><span class="f-icon">🏗️</span><div><h3>Height as a Barrier</h3><p>[Key finding placeholder] — Relationship between building height and solar adoption, including shading effects.</p></div></div>
-        <div class="finding rv d4"><span class="f-icon">💰</span><div><h3>Income &amp; Access</h3><p>[Key finding placeholder] — Correlation between median household income and solar adoption rate.</p></div></div>
+        <div class="finding rv d2">
+          <span class="f-icon" aria-hidden="true">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="10" width="6" height="14"/>
+              <rect x="11" y="4" width="6" height="20"/>
+              <rect x="19" y="14" width="6" height="10"/>
+              <line x1="2" y1="24" x2="26" y2="24"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Density &amp; Mutual Shading</h3>
+            <p>Combining spatial and social datasets, we found that solar production is highly uneven across the city. On the physical side, high building density in compact neighborhoods causes significant mutual shading, which limits the capacity of building surfaces, especially facades, to capture solar radiation.</p>
+          </div>
+        </div>
+
+        <div class="finding rv d3">
+          <span class="f-icon" aria-hidden="true">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="14" y1="3" x2="14" y2="25"/>
+              <path d="M19 7H11a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H8"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Income &amp; Solar Production</h3>
+            <p>On the social side, our clearest finding is a positive correlation between household income and solar energy production, with higher production in turn contributing to emission reductions.</p>
+          </div>
+        </div>
+
+        <div class="finding rv d4">
+          <span class="f-icon" aria-hidden="true">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 10l12-5 12 5-12 5z"/>
+              <path d="M6 12v6c0 1.6 3.6 3 8 3s8-1.4 8-3v-6"/>
+              <line x1="22" y1="10" x2="22" y2="17"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Education: An Unexpected Result</h3>
+            <p>Education level, by contrast, showed little effect on solar output, which we did not expect given its assumed link to environmental awareness and production.</p>
+          </div>
+        </div>
       </div>
+
       <div class="q-block rv d2">
-        <blockquote>"The geography of solar energy is not simply a map of sunshine — it is a map of inequality, shaped by the built environment."</blockquote>
-        <cite>Renewable Inequality</cite>
-        <p class="refl">[Reflection placeholder] — What structural barriers does this project reveal? What policy implications emerge from the spatial patterns identified?</p>
+        <blockquote>Sustainable urban development cannot stop at optimizing physical compactness; it must also address the social equity issues that sit behind these physical metrics.</blockquote>
+        <cite>Toward an Equitable Green City</cite>
+        <p class="refl">Without targeted intervention, the current pattern of energy development is likely to produce an uneven distribution of benefits. This outcome runs against the principle of distributive justice and risks marginalizing vulnerable groups during the energy transition.</p>
+        <p class="refl">By showing how urban form and socioeconomic status both shape solar adoption, the project gives urban planners a visualization tool for the early assessment of solar potential and its social implications, and contributes empirical evidence for building urban energy systems that are both sustainable and equitable.</p>
       </div>
+    </div>
+
+    <div class="references rv d3">
+      <div class="ref-h">References</div>
+      <ol class="ref-list">
+        <li>Heffron, R.J. (2022). Applying energy justice into the energy transition. <em>Renewable and Sustainable Energy Reviews</em>, 156(1), p.111936. <span class="doi">doi:10.1016/j.rser.2021.111936</span>.</li>
+        <li>Lobaccaro, G. and Frontini, F. (2014). Solar Energy in Urban Environment: How Urban Densification Affects Existing Buildings. <em>Energy Procedia</em>, 48, pp.1559–1569. <span class="doi">doi:10.1016/j.egypro.2014.02.176</span>.</li>
+        <li>Mohajeri, N., Upadhyay, G., Gudmundsson, A., Assouline, D., Kämpf, J. and Scartezzini, J.-L. (2016). Effects of urban compactness on solar energy potential. <em>Renewable Energy</em>, 93, pp.469–482. <span class="doi">doi:10.1016/j.renene.2016.02.053</span>.</li>
+        <li>Morganti, M., Salvati, A., Coch, H. and Cecere, C. (2017). Urban morphology indicators for solar energy analysis. <em>Energy Procedia</em>, 134, pp.807–814. <span class="doi">doi:10.1016/j.egypro.2017.09.533</span>.</li>
+      </ol>
     </div>
   </div>
   <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
