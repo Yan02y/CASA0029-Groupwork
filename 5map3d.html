@@ -3,19 +3,125 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D View</title>
+  <title>3D View · NYC Density &amp; Solar</title>
   <link rel="stylesheet" href="shared.css" />
+  <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+  <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
   <style>
     html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
     body::-webkit-scrollbar { display: none; }
     body { display: flex; align-items: center; padding: 40px 0; }
-    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
-    .map3d-grid { display: grid; grid-template-columns: 320px 1fr; gap: 3rem; align-items: start; }
+    .page-inner { width: 100%; max-width: 1600px; margin: 0 auto; padding: 0 3vw; }
+    .map3d-grid { display: grid; grid-template-columns: 240px 1fr; gap: 3rem; align-items: start; }
     .map3d-stats { display: flex; flex-direction: column; gap: 0.8rem; align-self: start; }
     .map3d-stats .tag { align-self: flex-start; width: auto; }
     .lead { max-width: 100%; }
-    .ph { width: 100%; height: 100% !important; margin: 0; }
-    .stat-item { flex: 0 0 auto; min-height: 40px; padding: 0.6rem;margin-bottom: 0; }
+    .ph { width: 100%; height: 100% !important; margin: 0; position: relative; overflow: hidden; border-radius: 6px; }
+    .stat-item { flex: 0 0 auto; min-height: 40px; padding: 0.6rem; margin-bottom: 0; }
+
+    #map { position: absolute; inset: 0; }
+
+    .map-info {
+      position: absolute; top: 14px; left: 14px; z-index: 3;
+      width: 250px; padding: 12px 14px;
+      background: rgba(242, 247, 245, 0.94);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-left: 3px solid #faae2b; border-radius: 4px;
+      font: 12px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #475d5b;
+      box-shadow: 0 2px 14px rgba(0, 51, 44, 0.10);
+      pointer-events: none;
+    }
+    .map-info .info-tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: #00473e; margin-bottom: 8px;
+    }
+    .map-info .info-name {
+      font-size: 14px; font-weight: 600; color: #00473e;
+      margin-bottom: 8px; line-height: 1.3;
+    }
+    .map-info .info-row {
+      display: flex; justify-content: space-between; gap: 12px;
+      padding: 3px 0; border-top: 1px dotted rgba(0, 71, 62, 0.15);
+    }
+    .map-info .info-row:first-of-type { border-top: none; }
+    .map-info .info-row strong { color: #00473e; font-weight: 600; text-align: right; }
+    .map-info .info-hint { font-style: italic; color: #475d5b; margin: 0; }
+
+    .map-legend {
+      position: absolute; bottom: 14px; left: 14px; z-index: 3;
+      width: 230px; padding: 11px 13px;
+      background: rgba(242, 247, 245, 0.94);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-radius: 4px;
+      font: 11px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #00473e;
+      box-shadow: 0 2px 14px rgba(0, 51, 44, 0.10);
+    }
+    .legend-section { margin-bottom: 10px; }
+    .legend-section:last-child { margin-bottom: 0; }
+    .legend-title {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .legend-bar { height: 8px; border-radius: 2px; margin-bottom: 3px; }
+    .legend-bar.density { background: linear-gradient(to right, #f2f7f5, #c5e0d8, #7fb8a8, #3a8275, #00473e); }
+    .legend-bar.height  { background: linear-gradient(to right, #eef3f7, #b8d3e2, #5a93b8, #1d5a7d, #0a2f4a); }
+    .legend-bar.solar   { background: linear-gradient(to right, rgba(250,174,43,0.10), rgba(250,174,43,0.25), rgba(250,174,43,0.45), rgba(250,174,43,0.70)); }
+    .legend-scale { display: flex; justify-content: space-between; font-size: 10px; color: #475d5b; }
+    .map-legend .legend-section.is-density { display: block; }
+    .map-legend .legend-section.is-height  { display: none; }
+    .map-legend.height-mode .legend-section.is-density { display: none; }
+    .map-legend.height-mode .legend-section.is-height  { display: block; }
+
+    .city-nav {
+      position: absolute; top: 14px; right: 14px; z-index: 3;
+      width: 220px;
+      padding: 12px 14px;
+      background: rgba(242, 247, 245, 0.94);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-radius: 4px;
+      font: 11px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      box-shadow: 0 2px 14px rgba(0, 51, 44, 0.10);
+      text-align: center;
+    }
+    .city-nav .nav-section { display: flex; flex-direction: column; align-items: center; }
+    .city-nav .nav-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+    .city-nav .nav-title {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: #00473e; margin-bottom: 6px;
+      text-align: center;
+    }
+    .city-nav a {
+      display: inline-block; padding: 3px 10px; margin: 0;
+      min-width: 60px;
+      background: #00473e; color: #f2f7f5;
+      text-decoration: none; border-radius: 3px;
+      cursor: pointer; transition: background .15s, color .15s;
+      text-align: center; box-sizing: border-box;
+    }
+    .city-nav a:hover, .city-nav a.is-active { background: #faae2b; color: #00473e; }
+
+    .city-nav .nav-section + .nav-section { margin-top: 10px; padding-top: 10px; border-top: 1px dotted rgba(0, 71, 62, 0.18); width: 100%; }
+    .view-btn {
+      display: inline-block; padding: 3px 10px; margin: 0;
+      min-width: 70px;
+      background: transparent; color: #00473e;
+      border: 1px solid rgba(0, 71, 62, 0.35);
+      border-radius: 3px;
+      font: inherit; cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+      text-align: center; box-sizing: border-box;
+    }
+    .view-btn:hover { border-color: #faae2b; }
+    .view-btn.is-active {
+      background: #00473e; color: #f2f7f5; border-color: #00473e;
+    }
+
+    .mapboxgl-ctrl-group { background: rgba(242, 247, 245, 0.94) !important; }
   </style>
 </head>
 <body>
@@ -24,21 +130,542 @@
       <div class="map3d-stats">
         <div class="tag rv">04 · 3D View</div>
         <h2 class="rv d1">Building height &amp; density</h2>
-        <p class="lead rv d2" style="font-size:1rem; margin-bottom:1rem;">NYC building footprint data covers ~1M records. Density metrics calculated per NTA and joined with solar status.</p>
-          
-        <div class="stat-item rv d2"><div class="stat-val">~1M</div><div class="stat-lbl">Building footprint records</div></div>
-        <div class="stat-item rv d3"><div class="stat-val">195</div><div class="stat-lbl">Neighbourhood Tabulation Areas</div></div>
+        <p class="lead rv d2" style="font-size:1rem; margin-bottom:1rem;">By comparing building density and mean roof heights, we can uncover where NYC holds the greatest solar potential. Tallest buildings in dense areas often generate less energy than the wide, flat roofs of Queens and Brooklyn. Toggle the base layers and hover over any glowing beacon to explore the data.</p>
+
+        <div class="stat-item rv d2"><div class="stat-val">Over 1M</div><div class="stat-lbl">Buildings</div></div>
+        <div class="stat-item rv d3"><div class="stat-val">262</div><div class="stat-lbl">Neighbourhood Tabulation Areas(NTAs)</div></div>
         <div class="stat-item rv d4"><div class="stat-val">5</div><div class="stat-lbl">Boroughs analysed</div></div>
       </div>
 
-      <!-- ↓ REPLACE WITH REAL DECK.GL / MAPBOX 3D -->
       <div class="ph rv d1" style="height:78vh;">
-        [ 3D BUILDING MAP ]<br><br>
-        Mapbox / deck.gl building extrusion<br>
-        Height coloured by density · Solar overlay
+        <div id="map"></div>
+
+        <div class="map-info" id="info-panel">
+          <span class="info-tag">Hover info</span>
+          <div id="info-body">
+            <p class="info-hint">Hover any orange spike to see NTA solar totals, or zoom in to inspect individual buildings.</p>
+          </div>
+        </div>
+
+        <div class="city-nav">
+          <div class="nav-section">
+            <div class="nav-title">Base layer</div>
+            <div class="nav-row">
+              <button type="button" class="view-btn is-active" data-view="density">Density</button>
+              <button type="button" class="view-btn" data-view="height">Height</button>
+            </div>
+          </div>
+          <div class="nav-section">
+            <div class="nav-title">Solar columns</div>
+            <div class="nav-row">
+              <button type="button" class="view-btn is-active" data-solar="on">On</button>
+              <button type="button" class="view-btn" data-solar="off">Off</button>
+            </div>
+          </div>
+          <div class="nav-section">
+            <div class="nav-title">Zoom to</div>
+            <div class="nav-row">
+              <a href="#" data-city="manhattan">Manhattan</a>
+              <a href="#" data-city="brooklyn">Brooklyn</a>
+              <a href="#" data-city="queens">Queens</a>
+              <a href="#" data-city="bronx">Bronx</a>
+              <a href="#" data-city="staten">Staten Is.</a>
+              <a href="#" data-city="overview" class="is-active">All NYC</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-legend" id="map-legend">
+          <div class="legend-section is-density">
+            <div class="legend-title">Housing density · NTA</div>
+            <div class="legend-bar density"></div>
+            <div class="legend-scale"><span>Low</span><span>High</span></div>
+          </div>
+          <div class="legend-section is-height">
+            <div class="legend-title">Mean roof height · NTA</div>
+            <div class="legend-bar height"></div>
+            <div class="legend-scale"><span>13 ft</span><span>187 ft</span></div>
+          </div>
+          <div class="legend-section">
+            <div class="legend-title">NTA total solar · kWh</div>
+            <div class="legend-bar solar"></div>
+            <div class="legend-scale"><span>3K</span><span>200K</span><span>3.4M</span></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
   <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
+
+  <script>
+    
+    const CFG = {
+      token: 'pk.eyJ1IjoieXV0b25nY2hlbiIsImEiOiJjbWxqYnBwNmcwYXQyM2dxd3g3dXBqdHA5In0.SXMIkxHoQVrx6-FkQO8PSg',
+
+      ntaTilesetUrl:    'mapbox://yutongchen.1ixhsbj8',
+      ntaSourceLayer:   'NTA_Density-9c270s',
+
+      ntaHeightTilesetUrl:  'mapbox://yutongchen.5m1bqiei',
+      ntaHeightSourceLayer: 'NTA_Final-21tp3c',
+
+      solarBufferTilesetUrl:  'mapbox://yutongchen.93hy3eja',
+      solarBufferSourceLayer: 'Buffer-5bqe74',
+
+      bldgTilesetUrl:   'mapbox://yutongchen.8qpa93ak',
+      bldgSourceLayer:  'Footprint_Solar',
+
+      debug: true
+    };
+
+    mapboxgl.accessToken = CFG.token;
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [-73.97, 40.67],
+      zoom: 10,
+      pitch: 35,
+      bearing: -12,
+      antialias: true
+    });
+
+    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'bottom-right');
+
+    const cities = {
+      manhattan: { center: [-73.9712, 40.7831], zoom: 14.6, pitch: 58, bearing: -22 },
+      brooklyn:  { center: [-73.9442, 40.6782], zoom: 14.2, pitch: 55, bearing: -10 },
+      queens:    { center: [-73.7949, 40.7282], zoom: 13.6, pitch: 52, bearing:   5 },
+      bronx:     { center: [-73.8648, 40.8448], zoom: 13.6, pitch: 52, bearing:   0 },
+      staten:    { center: [-74.1502, 40.5795], zoom: 13.0, pitch: 48, bearing:   0 },
+      overview:  { center: [-73.97,   40.74  ], zoom: 10.0, pitch: 35, bearing: -12 }
+    };
+    const cityLinks = document.querySelectorAll('.city-nav a');
+    cityLinks.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const c = cities[btn.dataset.city]; if (!c) return;
+        cityLinks.forEach(l => l.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        map.flyTo({ ...c, speed: 0.7, curve: 1.4, essential: true });
+      });
+    });
+
+    map.on('load', () => {
+      try {
+        map.setLight({ color: '#ffffff', intensity: 0.35, position: [1.15, 210, 30] });
+
+        const layers = map.getStyle().layers || [];
+        let firstSymbolId;
+        for (const l of layers) { if (l.type === 'symbol') { firstSymbolId = l.id; break; } }
+
+        map.addSource('nta-density',   { type: 'vector', url: CFG.ntaTilesetUrl });
+        map.addSource('nta-height',    { type: 'vector', url: CFG.ntaHeightTilesetUrl });
+        map.addSource('solar-buffers', { type: 'vector', url: CFG.solarBufferTilesetUrl });
+        map.addSource('nyc-bldgs',     { type: 'vector', url: CFG.bldgTilesetUrl });
+
+        map.addLayer({
+          id: 'nta-fill',
+          type: 'fill',
+          source: 'nta-density',
+          'source-layer': CFG.ntaSourceLayer,
+          maxzoom: 15,
+          paint: {
+            'fill-color': [
+              'interpolate', ['linear'],
+              ['to-number', ['get', 'Density'], 0],
+              0,       '#f2f7f5',
+              0.005,   '#c5e0d8',
+              0.01,    '#7fb8a8',
+              0.02,    '#3a8275',
+              0.029,   '#00473e'
+            ],
+            'fill-opacity': [
+              'interpolate', ['linear'], ['zoom'],
+              10, 0.78,
+              13, 0.55,
+              14, 0.0
+            ],
+            'fill-opacity-transition': { duration: 500, delay: 0 }
+          }
+        }, firstSymbolId);
+
+        map.addLayer({
+          id: 'nta-line',
+          type: 'line',
+          source: 'nta-density',
+          'source-layer': CFG.ntaSourceLayer,
+          maxzoom: 15,
+          paint: {
+            'line-color': '#00473e',
+            'line-width':   ['interpolate', ['linear'], ['zoom'], 9, 0.3, 13, 0.6],
+            'line-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0.35, 14, 0.0]
+          }
+        }, firstSymbolId);
+
+        map.addLayer({
+          id: 'nta-hover',
+          type: 'line',
+          source: 'nta-density',
+          'source-layer': CFG.ntaSourceLayer,
+          maxzoom: 15,
+          paint: { 'line-color': '#fa5246', 'line-width': 2 },
+          filter: ['==', 'nta2020', '']
+        }, firstSymbolId);
+
+        map.addLayer({
+          id: 'nta-height-fill',
+          type: 'fill',
+          source: 'nta-height',
+          'source-layer': CFG.ntaHeightSourceLayer,
+          maxzoom: 15,
+          paint: {
+            'fill-color': [
+              'interpolate', ['linear'],
+              ['to-number', ['get', 'height_roo_mean'], 0],
+              13,  '#eef3f7',
+              35,  '#b8d3e2',
+              60,  '#5a93b8',
+              100, '#1d5a7d',
+              187, '#0a2f4a'
+            ],
+            'fill-opacity': 0,
+            'fill-opacity-transition': { duration: 500, delay: 0 }
+          }
+        }, firstSymbolId);
+
+        map.addLayer({
+          id: 'nta-height-line',
+          type: 'line',
+          source: 'nta-height',
+          'source-layer': CFG.ntaHeightSourceLayer,
+          maxzoom: 15,
+          paint: {
+            'line-color': '#0a2f4a',
+            'line-width':   ['interpolate', ['linear'], ['zoom'], 9, 0.3, 13, 0.6],
+            'line-opacity': 0,
+            'line-opacity-transition': { duration: 500, delay: 0 }
+          }
+        }, firstSymbolId);
+
+        map.addLayer({
+          id: 'nta-height-hover',
+          type: 'line',
+          source: 'nta-height',
+          'source-layer': CFG.ntaHeightSourceLayer,
+          maxzoom: 15,
+          paint: { 'line-color': '#fa5246', 'line-width': 2 },
+          filter: ['==', 'nta2020', '']
+        }, firstSymbolId);
+
+        map.addLayer({
+          id: 'bldgs-3d',
+          type: 'fill-extrusion',
+          source: 'nyc-bldgs',
+          'source-layer': CFG.bldgSourceLayer,
+          minzoom: 13,
+          paint: {
+            'fill-extrusion-color': [
+              'case',
+              ['>', ['to-number', ['coalesce', ['get', 'solar_EstimatedAnnualProduction'], 0]], 0],
+              ['interpolate', ['exponential', 1.4],
+                ['to-number', ['get', 'solar_EstimatedAnnualProduction']],
+                500,     '#fff0d6',
+                5000,    '#ffd17a',
+                50000,   '#faae2b',
+                500000,  '#d68820',
+                8000000, '#8a4f00'
+              ],
+              '#c9d3cf'
+            ],
+            'fill-extrusion-height': [
+              'interpolate', ['linear'], ['zoom'],
+              13, 0,
+              14, [
+                '*',
+                ['case',
+                  ['>', ['to-number', ['get', 'height_roo'], 0], 5000], 100,
+                  ['to-number', ['get', 'height_roo'], 0]
+                ],
+                0.8
+              ]
+            ],
+            'fill-extrusion-base': 0,
+            'fill-extrusion-opacity': 0.95,
+            'fill-extrusion-vertical-gradient': true
+          }
+        });
+
+        map.addLayer({
+          id: 'bldg-hover',
+          type: 'line',
+          source: 'nyc-bldgs',
+          'source-layer': CFG.bldgSourceLayer,
+          minzoom: 13,
+          paint: { 'line-color': '#00473e', 'line-width': 2.2 },
+          filter: ['==', 'bin', '']
+        });
+
+      
+        map.addLayer({
+  id: 'nta-solar-glow',
+  type: 'circle',
+  source: 'solar-buffers',
+  'source-layer': CFG.solarBufferSourceLayer,
+  filter: ['>', ['to-number', ['coalesce', ['get', 'Statistics by category_sum'], 0]], 0],
+  paint: {
+    'circle-radius': [
+      'interpolate', ['linear'],
+      ['to-number', ['coalesce', ['get', 'Statistics by category_sum'], 0]],
+      0,       15,   
+      500000,  25,   
+      1500000, 40,
+      3376230, 60   
+    ],
+    
+    'circle-color': '#efcf7d', 
+    'circle-blur': 1.6,        
+    
+    'circle-opacity': [
+      'interpolate', ['linear'],
+      ['to-number', ['coalesce', ['get', 'Statistics by category_sum'], 0]],
+      0,       0.1,  
+      500000,  0.2,
+      1500000, 0.3,
+      3376230, 0.5   
+    ],
+    
+    'circle-pitch-alignment': 'map',
+    'circle-pitch-scale': 'viewport'
+  },
+  layout: { visibility: 'visible' }
+});
+
+
+        map.addLayer({
+  id: 'nta-solar-spikes',
+  type: 'fill-extrusion',
+  source: 'solar-buffers', 
+  'source-layer': CFG.solarBufferSourceLayer, 
+  
+  filter: ['>', ['to-number', ['coalesce', ['get', 'Statistics by category_sum'], 0]], 0],
+  
+  paint: {
+    'fill-extrusion-color': [
+      'interpolate', ['linear'],
+      ['to-number', ['coalesce', ['get', 'Statistics by category_sum'], 0]],
+      0,       '#FFF5C2', 
+      500000,  '#FFEB80', 
+      1500000, '#FFE242', 
+      3376230, '#ffd803'  
+    ],
+    
+    'fill-extrusion-height': [
+      'interpolate', ['linear'],
+      ['to-number', ['coalesce', ['get', 'Statistics by category_sum'], 0]],
+      0,       0,      
+      500000,  500,    
+      1500000, 1500,   
+      3376230, 3500    
+    ],
+    
+    'fill-extrusion-base': 0,
+    'fill-extrusion-opacity': 1.0,
+    'fill-extrusion-vertical-gradient': true 
+  },
+  layout: { visibility: 'visible' }
+});
+
+        const infoBody = document.getElementById('info-body');
+        const fmt = n => {
+          const v = Number(n);
+          if (n === null || n === undefined || n === '' || isNaN(v)) return '—';
+          if (v >= 0 && v <= 1) {
+          return parseFloat(v.toFixed(4)).toString();
+        };
+          return v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+     };
+
+        const resetInfo = () => {
+          infoBody.innerHTML = '<p class="info-hint">Hover any orange spike to see NTA solar totals, or zoom in to inspect individual buildings.</p>';
+        };
+
+        const bldgHover = (e) => {
+          if (!e.features.length) return;
+          const p = e.features[0].properties || {};
+          map.getCanvas().style.cursor = 'pointer';
+
+          if (p.bin !== undefined && p.bin !== null && p.bin !== '') {
+            map.setFilter('bldg-hover', ['==', 'bin', p.bin]);
+          }
+
+          const heightFt = (p.height_roo !== undefined && p.height_roo !== null && p.height_roo !== '')
+            ? `${Number(p.height_roo).toFixed(0)} ft` : '—';
+          const solarProd = p['solar_EstimatedAnnualProduction'];
+          const status   = p.solar_Status  || '—';
+          const address  = p.solar_Address || (p.bin ? `Building #${p.bin}` : 'Unknown building');
+          const nta      = p.solar_NTA     || '—';
+          const hasSolar = solarProd && Number(solarProd) > 0;
+
+          infoBody.innerHTML = `
+            <span class="info-tag" style="color:#ff6600;">Building</span>
+            <div class="info-name">${address}</div>
+            <div class="info-row"><span>Height</span><strong>${heightFt}</strong></div>
+            <div class="info-row"><span>Solar status</span><strong>${status}</strong></div>
+            <div class="info-row"><span>Annual prod.</span><strong>${hasSolar ? fmt(solarProd) + ' kWh' : '—'}</strong></div>
+            <div class="info-row"><span>NTA</span><strong>${nta}</strong></div>
+          `;
+        };
+        const bldgLeave = () => {
+          map.getCanvas().style.cursor = '';
+          map.setFilter('bldg-hover', ['==', 'bin', '']);
+          if (map.getZoom() < 14) return;
+          resetInfo();
+        };
+
+        map.on('mousemove', 'bldgs-3d',  bldgHover);
+        map.on('mouseleave', 'bldgs-3d', bldgLeave);
+
+        map.on('mousemove', 'nta-solar-spikes', (e) => {
+          if (!e.features.length) return;
+          const p = e.features[0].properties || {};
+          map.getCanvas().style.cursor = 'pointer';
+
+          const name    = p.ntaname  || 'Neighbourhood';
+          const boro    = p.boroname || '—';
+          const ntaCode = p.nta2020 || p.ntaabbrev || '—';
+          const total   = p['Statistics by category_sum'] ?? p['Statistics_by_category_sum'];
+
+          infoBody.innerHTML = `
+            <span class="info-tag" style="color:#ff6600;">NTA · Total solar</span>
+            <div class="info-name">${name}</div>
+            <div class="info-row"><span>Borough</span><strong>${boro}</strong></div>
+            <div class="info-row"><span>NTA code</span><strong>${ntaCode}</strong></div>
+            <div class="info-row"><span>Total production</span><strong>${fmt(total)}</strong></div>
+          `;
+        });
+        map.on('mouseleave', 'nta-solar-spikes', () => {
+          map.getCanvas().style.cursor = '';
+          resetInfo();
+        });
+
+        map.on('mousemove', 'nta-fill', (e) => {
+          if (map.getZoom() >= 14) return;
+          if (!e.features.length) return;
+          const p = e.features[0].properties || {};
+          if (p.nta2020) map.setFilter('nta-hover', ['==', 'nta2020', p.nta2020]);
+
+          const name    = p.ntaname  || p.NTA_HousingUnits_2020_Name    || 'Neighbourhood';
+          const boro    = p.boroname || p.NTA_HousingUnits_2020_Borough || '—';
+          const hunits  = p.NTA_HousingUnits_2020_Hunits;
+          const density = p.Density;
+
+          infoBody.innerHTML = `
+            <span class="info-tag">Neighbourhood · Density</span>
+            <div class="info-name">${name}</div>
+            <div class="info-row"><span>Borough</span><strong>${boro}</strong></div>
+            <div class="info-row"><span>Housing units</span><strong>${fmt(hunits)}</strong></div>
+            <div class="info-row"><span>Density</span><strong>${fmt(density)}</strong></div>
+          `;
+        });
+
+        map.on('mouseleave', 'nta-fill', () => {
+          map.setFilter('nta-hover', ['==', 'nta2020', '']);
+          if (map.getZoom() >= 14) return;
+          resetInfo();
+        });
+
+        map.on('mousemove', 'nta-height-fill', (e) => {
+          if (map.getZoom() >= 14) return;
+          if (!e.features.length) return;
+          const p = e.features[0].properties || {};
+          if (p.nta2020) map.setFilter('nta-height-hover', ['==', 'nta2020', p.nta2020]);
+
+          const name      = p.ntaname  || 'Neighbourhood';
+          const boro      = p.boroname || '—';
+          const meanH     = p.height_roo_mean;
+          const ntaCode   = p.nta2020 || '—';
+
+          infoBody.innerHTML = `
+            <span class="info-tag">Neighbourhood · Height</span>
+            <div class="info-name">${name}</div>
+            <div class="info-row"><span>Borough</span><strong>${boro}</strong></div>
+            <div class="info-row"><span>Mean roof height</span><strong>${fmt(meanH)} ft</strong></div>
+            <div class="info-row"><span>NTA code</span><strong>${ntaCode}</strong></div>
+          `;
+        });
+
+        map.on('mouseleave', 'nta-height-fill', () => {
+          map.setFilter('nta-height-hover', ['==', 'nta2020', '']);
+          if (map.getZoom() >= 14) return;
+          resetInfo();
+        });
+
+        const legendEl  = document.getElementById('map-legend');
+        const viewBtns  = document.querySelectorAll('.view-btn');
+
+        function setView(view) {
+          viewBtns.forEach(b => b.classList.toggle('is-active', b.dataset.view === view));
+
+          if (view === 'height') {
+            map.setPaintProperty('nta-fill',         'fill-opacity',
+              ['interpolate', ['linear'], ['zoom'], 10, 0.0, 14, 0.0]);
+            map.setPaintProperty('nta-line',         'line-opacity', 0);
+            map.setPaintProperty('nta-height-fill',  'fill-opacity',
+              ['interpolate', ['linear'], ['zoom'], 10, 0.78, 13, 0.55, 14, 0.0]);
+            map.setPaintProperty('nta-height-line',  'line-opacity',
+              ['interpolate', ['linear'], ['zoom'], 9, 0.35, 14, 0.0]);
+            legendEl.classList.add('height-mode');
+          } else {
+            map.setPaintProperty('nta-fill',         'fill-opacity',
+              ['interpolate', ['linear'], ['zoom'], 10, 0.78, 13, 0.55, 14, 0.0]);
+            map.setPaintProperty('nta-line',         'line-opacity',
+              ['interpolate', ['linear'], ['zoom'], 9, 0.35, 14, 0.0]);
+            map.setPaintProperty('nta-height-fill',  'fill-opacity', 0);
+            map.setPaintProperty('nta-height-line',  'line-opacity', 0);
+            legendEl.classList.remove('height-mode');
+          }
+        }
+
+        viewBtns.forEach(btn => {
+          btn.addEventListener('click', () => setView(btn.dataset.view));
+        });
+
+        const solarBtns = document.querySelectorAll('[data-solar]');
+        const solarLayers = ['nta-solar-spikes', 'nta-solar-glow'];
+        solarBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const on = btn.dataset.solar === 'on';
+            solarBtns.forEach(b => b.classList.toggle('is-active', b === btn));
+            solarLayers.forEach(id => {
+              if (map.getLayer(id)) {
+                map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+              }
+            });
+          });
+        });
+
+        if (CFG.debug) {
+          map.on('click', (e) => {
+            const feats = map.queryRenderedFeatures(e.point, { layers: ['nta-solar-spikes', 'bldgs-3d', 'nta-fill', 'nta-height-fill'] });
+            if (!feats.length) {
+              console.log('[debug] no NTA / building feature here. Style layers present:', map.getStyle().layers.map(l => l.id));
+              return;
+            }
+            feats.forEach(f => console.log(`[debug] ${f.layer.id} →`, f.properties));
+          });
+        }
+      } catch (err) {
+        console.error('[map setup failed]', err);
+      }
+    });
+
+    map.on('error', (e) => {
+      const msg = (e && e.error && e.error.message) || '';
+      if (/source-layer|source layer/i.test(msg)) {
+        console.warn('[Mapbox] source-layer not found — check the "Vector layers" name on the tileset page in Studio and update CFG.ntaSourceLayer / CFG.bldgSourceLayer.', msg);
+      }
+    });
+  </script>
 </body>
 </html>
