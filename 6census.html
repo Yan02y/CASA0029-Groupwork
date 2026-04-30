@@ -3,66 +3,713 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Income &amp; Solar</title>
-  <link rel="stylesheet" href="shared.css" />
+  <title>NYC Solar &amp; Census Dashboard</title>
+
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
   <style>
-    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; background: var(--cyan-light); }
-    body::-webkit-scrollbar { display: none; }
-    body { display: flex; align-items: center; padding: 40px 0; }
-    .page-inner { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 6vw; }
-    .choro-grid { display: grid; grid-template-columns: 320px 1fr; gap: 3rem; align-items: start; }
-    .choro-grid > div:last-child { padding-top: 2rem; }
-    .lead { max-width: 100%; }
-    .ph { width: 100%; height: 100% !important; margin:0; }
-    .leg-panel {
-      background: var(--bg); border: 2.5px solid var(--headline);
-      border-radius: 8px; padding: 1.5rem;
-      display: flex; flex-direction: column; gap: 1.5rem;
-      margin-top: 1rem; box-shadow: 4px 4px 0px var(--headline);
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:      #2b2c34;
+      --navy-mid:  #1a3a5c;
+      --gold-bg:   #ffa700;
+      --bg:        #f4f6fa;
+      --surface:   #ffffff;
+      --border:    rgba(0,0,0,0.09);
+      --text:      #2b2c34;
+      --muted:     #5a7090;
+      --sidebar-w: 128px;
+      --panel-w:   320px;
+      --topbar-h:  52px;
+      --ease:      0.18s ease;
     }
-    .leg-head { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; color: var(--headline); margin-bottom: 0.8rem; }
-    .leg-rows { display: flex; flex-direction: column; gap: 0.6rem; }
-    .leg-row { display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem; font-weight: 500; color: var(--headline); }
-    .swatch { width: 32px; height: 16px; border: 2px solid var(--headline); border-radius: 4px; flex-shrink: 0; }
+
+    html, body {
+      height: 100%; width: 100%;
+      overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .shell {
+      display: grid;
+      grid-template-rows: var(--topbar-h) 1fr;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Top Bar */
+    .topbar {
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .topbar-title {
+      font-size: 13.5px; font-weight: 600; color: #fff;
+      letter-spacing: -0.02em; white-space: nowrap; flex-shrink: 0;
+    }
+    .topbar-sep {
+      width: 1px; height: 16px;
+      background: rgba(255,255,255,0.18);
+      flex-shrink: 0; margin: 0 4px;
+    }
+    .topbar-sub {
+      font-size: 12px; color: rgba(255,255,255,0.8);
+      font-style: italic; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Body */
+    .body {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr var(--panel-w);
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: #eef1f7;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      justify-content: center;
+      padding: 12px 6px;
+      overflow-y: auto;
+      scrollbar-width: none;
+      z-index: 5;
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+
+    .layer-btn {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 5px;
+      padding: 9px 6px 10px;
+      border-radius: 6px; cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: background var(--ease), border-color var(--ease);
+      user-select: none;
+    }
+    .layer-btn:hover { background: #dbe8f8; border-color: rgba(42,111,201,0.12); }
+    .layer-btn.active { background: #d4e5f8; border-color: rgba(42,111,201,0.35); }
+
+    .layer-icon {
+      width: 60px; height: 60px;
+      border-radius: 5px; background: #e2ecf8;
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--ease);
+    }
+    .layer-btn.active .layer-icon { background: #c0d8f5; }
+
+    .layer-name {
+      font-size: 12px; font-weight: 500;
+      text-align: center; color: var(--muted); line-height: 1.3;
+    }
+    .layer-btn.active .layer-name { color: #1a4f9a; }
+
+    /* Map */
+    .map-wrap { position: relative; overflow: hidden; }
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    .map-loading {
+      position: absolute; inset: 0;
+      background: #1a2f4a;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 50; transition: opacity 0.4s ease;
+    }
+    .map-loading.hidden { opacity: 0; pointer-events: none; }
+    .loading-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,0.8);
+      animation: pulse 1.2s ease-in-out infinite;
+      margin: 0 4px;
+    }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%,80%,100% { transform:scale(0.7); opacity:0.4; }
+      40%          { transform:scale(1);   opacity:1;   }
+    }
+
+    .map-legend {
+      position: absolute; bottom: 30px; left: 12px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 9px 12px; z-index: 10;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.10); min-width: 155px;
+    }
+    .legend-title {
+      font-size: 9px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); margin-bottom: 7px;
+    }
+    .key-row {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 10.5px; color: var(--text); margin-bottom: 4px;
+    }
+    .key-row:last-child { margin-bottom: 0; }
+    .key-sw {
+      width: 20px; height: 11px; border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.13); flex-shrink: 0;
+    }
+
+    /* Right Panel */
+    .right-panel {
+      display: flex; flex-direction: column;
+      overflow: hidden; border-left: 1px solid var(--border); z-index: 5;
+    }
+
+    /* Blue right top */
+    .panel-desc {
+      background: var(--navy-mid);
+      padding: 20px 16px;
+      flex-shrink: 0;
+      min-height: 360px;
+    }
+    .panel-desc-title {
+      font-size: 14px; font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px;
+    }
+    .panel-desc-text {
+      font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.65;
+    }
+    .panel-desc-divider { height: 1px; background: rgba(255,255,255,0.10); margin: 12px 0; }
+    .panel-desc-text strong {
+      color: rgba(255,255,255,0.95);
+      font-size: 14px;
+    }
+
+    /* Blue space: live production value */
+    .panel-live-label {
+      font-size: 13px; color: rgba(255,255,255,0.8);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
+    }
+    .panel-live-row { display: flex; align-items: baseline; gap: 8px; }
+    .live-icon { font-size: 18px; line-height: 1; }
+    .live-val {
+      font-size: 30px; font-weight: 600; color: #fff;
+      font-family: 'DM Mono', monospace; line-height: 1;
+    }
+    .live-unit { font-size: 12px; color: rgba(255,255,255,0.8); }
+    .live-sublabel {
+      font-size: 12px; color: rgba(255,255,255,0.8);
+      margin-top: 5px; font-style: italic; min-height: 14px;
+    }
+
+    /* yellow section */
+    .panel-census {
+      background: var(--gold-bg); padding: 14px 16px;
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .panel-section-title {
+      font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,0.92);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }   
+    .chart-outer {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center; min-height: 0;
+    }
+    .chart-inner { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+    /* Donut */
+    .donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+    .donut-svg-wrap {
+      position: relative;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .donut-center-label { position: absolute; text-align: center; pointer-events: none; }
+    .donut-center-pct {
+      font-size: 20px; font-weight: 600;
+      font-family: 'DM Mono', monospace; color: #fff; line-height: 1;
+    }
+    .donut-center-sub { font-size: 12px; color: #fff; line-height: 1.3; }
+    .donut-legend { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    .dl-row { display: flex; align-items: center; gap: 7px; font-size: 12px; color: rgba(255,255,255,0.9); }
+    .dl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dl-label { flex: 1; }
+    .dl-pct { font-weight: 600; font-family: 'DM Mono', monospace; color: #fff; font-size: 12px; }
+
+    /* Tooltip */
+    .map-tooltip {
+      position: fixed; pointer-events: none; z-index: 200;
+      background: rgba(15,37,64,0.94); color: #fff;
+      border-radius: 7px; padding: 9px 13px;
+      font-size: 11px; line-height: 1.5;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.30);
+      min-width: 170px; opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+    .map-tooltip.visible { opacity: 1; }
+    .tt-name { font-size: 9px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .tt-label { font-size: 9.5px; color: rgba(255,255,255,0.58); margin-top: 4px; margin-bottom: 2px; }
+    .tt-val-row { display: flex; align-items: baseline; gap: 4px; }
+    .tt-val { font-size: 20px; font-weight: 600; font-family: 'DM Mono', monospace; line-height: 1; }
+    .tt-unit { font-size: 10px; color: rgba(255,255,255,0.52); }
+
+    .mapboxgl-ctrl-attrib { font-size: 8px !important; }
+
+    /* Reveal */
+    .rv { opacity: 0; transform: translateY(7px); transition: opacity 0.42s ease, transform 0.42s ease; }
+    .rv.on { opacity: 1; transform: none; }
+    .d1{transition-delay:0.04s} .d2{transition-delay:0.12s} .d3{transition-delay:0.22s}
   </style>
 </head>
 <body>
-  <div class="page-inner">
-    <div class="choro-grid">
-      <div>
-        <div class="tag rv">05 · Census &amp; Solar</div>
-        <h2 class="rv d1">Income inequality &amp; solar access</h2>
-        <p class="lead rv d2" style="font-size:1rem; margin-bottom:1rem;">Median household income from US Census ACS, correlated with solar adoption rates by census tract.</p>
-        <div class="leg-panel rv d3">
-          <div>
-            <div class="leg-head">Income (median HH)</div>
-            <div class="leg-rows">
-              <div class="leg-row"><div class="swatch" style="background:#f7fcf5;"></div>&lt; $30k</div>
-              <div class="leg-row"><div class="swatch" style="background:#c7e9c0;"></div>$30k – $60k</div>
-              <div class="leg-row"><div class="swatch" style="background:#74c476;"></div>$60k – $100k</div>
-              <div class="leg-row"><div class="swatch" style="background:#238b45;"></div>$100k – $150k</div>
-              <div class="leg-row"><div class="swatch" style="background:#00441b;"></div>$150k+</div>
-            </div>
+
+<div class="shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar rv d1">
+    <span class="topbar-title">06 · NYC Solar &amp; Census Dashboard</span>
+    <div class="topbar-sep"></div>
+    <span class="topbar-sub">Click on a Census Tract to view the solar potential and census data</span>
+  </div>
+
+  <div class="body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar rv d2">
+      <div class="layer-btn active" data-layer="production">
+        <div class="layer-icon">
+          <img src="images/icons/production2.png" style="width:42px;height:42px;object-fit:contain;" />
+        </div>
+        <div class="layer-name">Estimated Annual Production</div>
+      </div>
+      <div class="layer-btn" data-layer="reduction">
+        <div class="layer-icon">
+          <img src="images/icons/Co2.png" style="width:42px;height:42px;object-fit:contain;" />
+        </div>
+        <div class="layer-name">Solar Emissions Reduction</div>
+      </div>
+      <div class="layer-btn" data-layer="population">
+        <div class="layer-icon">
+          <img src="images/icons/population.png" style="width:42px;height:42px;object-fit:contain;" />
+        </div>
+        <div class="layer-name">Total Population</div>
+      </div>
+      <div class="layer-btn" data-layer="income">
+        <div class="layer-icon">
+          <img src="images/icons/income.png" style="width:42px;height:42px;object-fit:contain;" />
+        </div>
+        <div class="layer-name">Income</div>
+      </div>
+      <div class="layer-btn" data-layer="education">
+        <div class="layer-icon">
+          <img src="images/icons/education.png" style="width:42px;height:42px;object-fit:contain;" />
+        </div>
+        <div class="layer-name">Education</div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="map-wrap rv d1">
+      <div id="map"></div>
+      <div class="map-loading" id="map-loading">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+      <div class="map-legend" id="map-legend">
+        <div class="legend-title" id="legend-title"></div>
+        <div id="legend-rows"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel rv d3">
+
+      <!-- Blue: description + live production value -->
+      <div class="panel-desc">
+        <div class="panel-desc-title">About This Map</div>
+        <div class="panel-desc-text">
+          <strong>Explore NYC's Solar Future</strong>
+          <p>This dashboard maps out rooftop solar potential across NYC neighborhoods, layered with local data from the 2020 Census.</p>
+          <p>Use the menu on the left to select different data layers. See how solar energy production (kWh) and carbon savings (MT) connect with local population, income, and education levels.</p>
+        </div>
+        <div class="panel-desc-divider"></div>
+        <div class="panel-live-label">Estimated Annual Production · Hover over map</div>
+        <div class="panel-live-row">
+          <span class="live-icon">☀️⚡</span>
+          <span class="live-val" id="live-val">—</span>
+          <span class="live-unit">kWh / yr</span>
+        </div>
+        <div class="live-sublabel" id="live-sublabel">Move cursor over a census tract</div>
+      </div>
+
+      <!-- Gold: education donut chart (always shown) -->
+      <div class="panel-census">
+        <div class="panel-census-top">
+          <div class="panel-live-label">Total Population</div>
+          <div class="panel-live-row">
+            <span class="live-icon">👥</span>
+            <span class="live-val" id="total-pop-val">—</span>
+            <span class="live-unit">people</span>
           </div>
-          <div>
-            <div class="leg-head">Solar adoption rate</div>
-            <div class="leg-rows">
-              <div class="leg-row"><div class="swatch" style="background:#fff7bc;"></div>Low</div>
-              <div class="leg-row"><div class="swatch" style="background:#ffd803;"></div>Medium</div>
-              <div class="leg-row"><div class="swatch" style="background:#ff8906;"></div>High</div>
-            </div>
+          <div class="panel-desc-divider"></div>
+          <div class="panel-section-title">Education Attainment</div>
+          <div style="margin-bottom: 12px;"></div>
+        </div>
+        <div class="chart-outer">
+          <div class="chart-inner">
+            <div class="donut-wrap" id="chart-donut"></div>
           </div>
         </div>
       </div>
 
-      <!-- ↓ REPLACE WITH REAL CHOROPLETH MAP -->
-      <div class="ph rv d1" style="height:78vh;">
-        [ CHOROPLETH MAP ]<br><br>
-        Census tract level · Mapbox<br>
-        Income vs Solar adoption overlay
-      </div>
     </div>
   </div>
-  <script>window.addEventListener('load', () => setTimeout(() => document.querySelectorAll('.rv').forEach(e => e.classList.add('on')), 80));</script>
+</div>
+
+<!-- Tooltip -->
+<div class="map-tooltip" id="map-tooltip">
+  <div class="tt-name" id="tt-name">—</div>
+  <div class="tt-label" id="tt-label">Estimated Annual Production</div>
+  <div class="tt-val-row">
+    <span class="tt-val" id="tt-val">—</span>
+    <span class="tt-unit" id="tt-unit">kWh / yr</span>
+  </div>
+</div>
+
+<script>
+// Layer configuration
+const LAYERS = {
+  production: {
+    mapboxLayerId: 'production',
+    propertyField: 'Solar_Annual_Production_kWh',
+    unit: 'kWh / yr',
+    legendTitle: 'Solar Annual Production (kWh)',
+    legendStops: [
+      { color: '#c6c3c3', label: 'N/A' },
+      { color: '#feedde', label: '1 – 47,520' },
+      { color: '#fdbe85', label: '47,520 – 114,642' },
+      { color: '#fd8d3c', label: '114,642 – 220,583' },
+      { color: '#e6550d', label: '220,583 – 405,053' },
+      { color: '#a63603', label: '405,053 – 20,395,943' },
+    ],
+  },
+  reduction: {
+    mapboxLayerId: 'reduction',
+    propertyField: 'Solar_Emissions_Reduction_MT',
+    unit: 'MT / yr',
+    legendTitle: 'Solar Emissions Reduction (MT)',
+    legendStops: [
+      { color: '#c6c3c3', label: 'N/A' },
+      { color: '#ffffcc', label: '1 – 19.6' },
+      { color: '#c2e699', label: '19.6 – 44.2' },
+      { color: '#78c679', label: '44.2 – 84.8' },
+      { color: '#31a354', label: '84.8 – 174.4' },
+      { color: '#006837', label: '174.4 – 3,239.0' },
+    ],
+  },
+  population: {
+    mapboxLayerId: 'population',
+    propertyField: 'Total_Population',
+    unit: 'per sq mi',
+    legendTitle: 'Total Population',
+    legendStops: [
+      { color: '#c6c3c3', label: 'N/A' },
+      { color: '#fcbba1', label: '1 – 1,999' },
+      { color: '#fc9272', label: '1,999 – 2,926' },
+      { color: '#fb6a4a', label: '2,926 – 3,874' },
+      { color: '#ef3b2c', label: '3,874 – 5,202' },
+      { color: '#cb181d', label: '5,202 – 16,963' },
+    ],
+  },
+  income: {
+    mapboxLayerId: 'median-earnings',
+    propertyField: 'Median_Earnings',
+    unit: 'median $ / yr',
+    legendTitle: 'Median Earnings (over 25 years)',
+    legendStops: [
+      { color: '#c6c3c3', label: 'N/A' },
+      { color: '#eff3ff', label: '$1 – $37,075' },
+      { color: '#bdd7e7', label: '$37,075 – $47,245' },
+      { color: '#6baed6', label: '$47,245 – $56,640' },
+      { color: '#3182bd', label: '$56,650 – $74,722' },
+      { color: '#08519c', label: '$74,722 – $223,006' },
+    ],
+  },
+  education: {
+    mapboxLayerId: 'bachelor-higher',
+    propertyField: 'Bachelor_higher',
+    unit: '% (over 25 years)',
+    legendTitle: "Education (% with Bachelor's or higher)",
+    legendStops: [
+      { color: '#c6c3c3', label: 'N/A' },
+      { color: '#edf8fb', label: '1% – 18.8%' },
+      { color: '#b3cde3', label: '18.8% – 29.4%' },
+      { color: '#8c96c6', label: '29.4% – 38.5%' },
+      { color: '#8856a7', label: '38.5% – 56.1%' },
+      { color: '#810f7c', label: 'over 56.1%' },
+    ],
+  },
+};
+
+// Education fields always used for donut chart
+const EDU_FIELDS = [
+  { field: 'High_school',     label: 'High School', color: 'rgba(255,255,255,0.90)' },
+  { field: 'Bachelor_degree', label: "Bachelor's",  color: 'rgba(255,255,255,0.65)' },
+  { field: 'Graduate_degree', label: 'Graduate',    color: 'rgba(255,255,255,0.40)' },
+  { field: 'Other',           label: 'Other',       color: 'rgba(255,255,255,0.20)' },
+];
+
+// Cache all layer IDs for easy reference
+const ALL_IDS = Object.values(LAYERS).map(c => c.mapboxLayerId);
+let activeLayer = 'production';
+
+/* Mapbox */
+
+
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/yan9797/cmok9irvw000t01r27jfxazum',
+  center: [-73.94, 40.70],
+  zoom: 10,
+  minZoom: 8,
+  maxZoom: 17,
+});
+
+map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
+
+// map load
+map.on('load', () => {
+  document.getElementById('map-loading').classList.add('hidden');
+
+  const styleIds = map.getStyle().layers.map(l => l.id);
+  console.log('%c Available layer IDs:', 'font-weight:bold;color:#2a6fc9', '\n' + styleIds.join('\n'));
+
+  ALL_IDS.forEach(id => {
+    if (!map.getLayer(id)) {
+      console.warn(`⚠ Layer not found: "${id}"`);
+      return;
+    }
+    map.on('mousemove',  id, onMouseMove);
+    map.on('mouseleave', id, onMouseLeave);
+    map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+  });
+
+  applyVisibility(activeLayer);
+
+  // hover highlight border
+  map.addSource('highlight-source', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] }
+  });
+
+  map.addLayer({
+    id: 'highlight-border',
+    type: 'line',
+    source: 'highlight-source',
+    paint: {
+      'line-color': '#ffffff',
+      'line-width': 2,
+      'line-opacity': 0.9
+    }
+  });
+});
+
+/* Visibility */
+function applyVisibility(key) {
+  const styleIds = map.getStyle().layers.map(l => l.id);
+  ALL_IDS.forEach(id => {
+    if (styleIds.includes(id)) map.setLayoutProperty(id, 'visibility', 'none');
+  });
+  const tid = LAYERS[key].mapboxLayerId;
+  if (styleIds.includes(tid)) map.setLayoutProperty(tid, 'visibility', 'visible');
+}
+
+/* DOM refs */
+const tooltip   = document.getElementById('map-tooltip');
+const liveVal   = document.getElementById('live-val');
+const liveSub   = document.getElementById('live-sublabel');
+const chartDonut = document.getElementById('chart-donut');
+
+/* Mouse move: update tooltip + live val + donut */
+function onMouseMove(e) {
+  if (!e.features || !e.features.length) return;
+
+  // Update highlight border
+  map.getSource('highlight-source').setData({
+    type: 'FeatureCollection',
+    features: [e.features[0]]
+  });
+
+  const props = e.features[0].properties;
+  const cfg   = LAYERS[activeLayer];
+
+  // Always show production value in the right panel live section
+  const rawProd = props['Solar_Annual_Production_kWh'];
+  const dispProd = rawProd != null
+    ? (typeof rawProd === 'number' ? rawProd.toLocaleString() : String(rawProd))
+    : '—';
+
+  // Tooltip shows the active layer's value
+  const rawActive = props[cfg.propertyField];
+  const dispActive = rawActive != null
+    ? (typeof rawActive === 'number' ? rawActive.toLocaleString() : String(rawActive))
+    : '—';
+
+  // Feature name
+  const name = props.name || props.NAME || props.NAMELSAD ||
+               props.tract_name || props.GEOID || props.GEO_ID ||
+               props.NTAName || props.boro_name || 'Census Tract';
+
+  // Position & show tooltip
+  tooltip.style.left = (e.originalEvent.clientX + 14) + 'px';
+  tooltip.style.top  = (e.originalEvent.clientY - 40) + 'px';
+  tooltip.classList.add('visible');
+  document.getElementById('tt-name').textContent  = name;
+  document.getElementById('tt-val').textContent   = dispActive;
+  document.getElementById('tt-label').textContent = cfg.legendTitle;
+  document.getElementById('tt-unit').textContent  = cfg.unit;
+
+  // Right panel live production
+  liveVal.textContent = dispProd;
+  liveSub.textContent = name;
+
+  // Total population
+  const pop = props['Total_Population'] || props['total_pop'] || props['POP'];
+  document.getElementById('total-pop-val').textContent =
+    pop != null ? Number(pop).toLocaleString() : '—';
+
+  // Always update education donut
+  updateDonut(props);
+}
+
+/* Mouse leave */
+function onMouseLeave() {
+  
+  // Clear highlight border
+  map.getSource('highlight-source').setData({
+    type: 'FeatureCollection',
+    features: []
+  });
+
+  tooltip.classList.remove('visible');
+  map.getCanvas().style.cursor = '';
+
+  liveVal.textContent = '—';
+  liveSub.textContent = 'Move cursor over a census tract';
+  document.getElementById('total-pop-val').textContent = '—';
+
+  resetDonut();
+}
+
+/* Donut: render from feature props */
+function updateDonut(props) {
+  const values = EDU_FIELDS.map(d => parseFloat(props[d.field]) || 0);
+  const total  = values.reduce((a, b) => a + b, 0) || 1;
+  const circ   = 2 * Math.PI * 72;
+
+  // Create SVG segments for each education category
+  let offset = 0;
+  const segments = EDU_FIELDS.map((d, i) => {
+    const dash = (values[i] / total) * circ;
+    const seg = `<circle cx="80" cy="80" r="62" fill="none"
+      stroke="${d.color}" stroke-width="30"
+      stroke-dasharray="${dash.toFixed(1)} ${(circ - dash).toFixed(1)}"
+      stroke-dashoffset="${(-offset).toFixed(1)}"
+      transform="rotate(-90 80 80)"/>`;
+    offset += dash;
+    return seg;
+  }).join('');
+
+  const maxIdx   = values.indexOf(Math.max(...values));
+  const maxPct   = Math.round((values[maxIdx] / total) * 100);
+  const maxLabel = EDU_FIELDS[maxIdx].label;
+
+  // Render SVG donut + legend
+  chartDonut.innerHTML = `
+    <div class="donut-svg-wrap">
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        <circle cx="80" cy="80" r="62" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="30"/>
+        ${segments}
+      </svg>
+      <div class="donut-center-label">
+        <div class="donut-center-pct">${maxPct}%</div>
+        <div class="donut-center-sub">${maxLabel}</div>
+      </div>
+    </div>
+    <div class="donut-legend">
+      ${EDU_FIELDS.map((d, i) => `
+        <div class="dl-row">
+          <div class="dl-dot" style="background:${d.color}"></div>
+          <span class="dl-label">${d.label}</span>
+          <span class="dl-pct">${Math.round((values[i] / total) * 100)}%</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* Donut: reset to placeholder */
+function resetDonut() {
+  chartDonut.innerHTML = `
+    <div class="donut-svg-wrap">
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        <circle cx="80" cy="80" r="62" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="30"/>
+      </svg>
+      <div class="donut-center-label">
+        <div class="donut-center-pct">—</div>
+        <div class="donut-center-sub">Hover map</div>
+      </div>
+    </div>
+    <div class="donut-legend">
+      ${EDU_FIELDS.map(d => `
+        <div class="dl-row">
+          <div class="dl-dot" style="background:${d.color}"></div>
+          <span class="dl-label">${d.label}</span>
+          <span class="dl-pct">—</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* Legend */
+function updateLegend(key) {
+  const cfg = LAYERS[key];
+  document.getElementById('legend-title').textContent = cfg.legendTitle;
+  document.getElementById('legend-rows').innerHTML = cfg.legendStops
+    .map(s => `<div class="key-row"><div class="key-sw" style="background:${s.color}"></div>${s.label}</div>`)
+    .join('');
+}
+
+/* Sidebar buttons */
+document.querySelectorAll('.layer-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeLayer = btn.dataset.layer;
+    if (map.isStyleLoaded()) applyVisibility(activeLayer);
+    updateLegend(activeLayer);
+    // Reset panel on layer switch
+    liveVal.textContent = '—';
+    liveSub.textContent = 'Move cursor over a census tract';
+    document.getElementById('total-pop-val').textContent = '—';
+    tooltip.classList.remove('visible');
+    resetDonut();
+  });
+});
+
+/* Init */
+updateLegend('production');
+resetDonut();
+
+window.addEventListener('load', () => {
+  setTimeout(() => document.querySelectorAll('.rv').forEach(el => el.classList.add('on')), 80);
+});
+</script>
 </body>
 </html>

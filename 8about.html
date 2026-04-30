@@ -19,10 +19,30 @@
     }
     .t-card:hover { background: var(--yellow); transform: translate(-2px,-2px); box-shadow: 6px 6px 0px var(--headline); }
     .t-av {
-      width: 48px; height: 48px; background: var(--cyan-dark);
-      border: 2px solid var(--headline); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 1.2rem; color: var(--headline); flex-shrink: 0;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+    .t-links {
+      display: flex;
+      gap: 12px;
+      margin-top: 5px;
+    }
+    .t-links a {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .t-links a:hover { color: var(--text); }
+    .t-links a svg {
+      width: 12px; height: 12px;
+      flex-shrink: 0;
     }
     .t-name { font-weight: 700; font-size: 1rem; color: var(--headline); }
     .t-role { font-size: 0.85rem; font-weight: 500; margin-top: 0.2rem; }
@@ -56,15 +76,35 @@
 </head>
 <body>
   <div class="page-inner">
-    <div class="tag rv">07 · About</div>
+    <div class="tag rv">08 · About</div>
     <div class="about-grid">
       <div>
         <h2 class="rv d1">Team &amp; project</h2>
         <p class="rv d2 lead" style="margin-bottom:1rem;">CASA0029: Urban Data Visualisation<br>Centre for Advanced Spatial Analysis, UCL</p>
         <div class="team-list">
-          <div class="t-card rv d2"><div class="t-av">Y</div><div><div class="t-name">Yifei Sun</div><div class="t-role">Time-series chart · Choropleth map</div></div></div>
-          <div class="t-card rv d3"><div class="t-av">Y</div><div><div class="t-name">Yutong Chen</div><div class="t-role">3D building map · Findings & reflection</div></div></div>
-          <div class="t-card rv d4"><div class="t-av">J</div><div><div class="t-name">Jie Liu</div><div class="t-role">Web framework · Solar distribution</div></div></div>
+          <div class="t-card rv d2">
+            <img class="t-av" src="images/team/S.jpg" alt="S" />
+            <div><div class="t-name">Yifei Sun</div>
+            <div class="t-links">
+              <a href="https://github.com/yan02y" target="_blank">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+              </a>
+              <a href="mailto:sff2220608529_sss@hotmail.com">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                @email.com
+              </a>
+            </div>
+            <div class="t-role">Time trend chart · NYC Solar & Census Dashboard</div>
+          </div>
+        </div>
+
+          <div class="t-card rv d3">
+            <img class="t-av" src="images/team/C.jpg" alt="C" />
+            <div><div class="t-name">Yutong Chen</div><div class="t-role">3D building map · Findings & reflection</div></div></div>
+          <div class="t-card rv d4">
+            <img class="t-av" src="images/team/L.jpg" alt="L" />
+            <div><div class="t-name">Jie Liu</div><div class="t-role">Web framework · Solar distribution</div></div></div>
         </div>
       </div>
       <div>
@@ -75,6 +115,7 @@
           <div class="src-row"><span class="src-n">03</span><div><strong>NYSERDA NY-Sun</strong><span>7,474 completed + 3,714 pipeline · County level · 2000–2026</span></div></div>
           <div class="src-row"><span class="src-n">04</span><div><strong>US Census Bureau ACS</strong><span>Median household income by census tract</span></div></div>
           <div class="src-row"><span class="src-n">05</span><div><strong>Mapbox GL JS</strong><span>Base map tiles · 3D extrusion · Choropleth rendering</span></div></div>
+          <div class="src-row"><span class="src-n">06</span><div><strong>Mapbox GL JS</strong><span>Base map tiles · 3D extrusion · Choropleth rendering</span></div></div>
         </div>
       </div>
     </div>
